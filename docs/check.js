@@ -231,7 +231,8 @@
         set("learns", fell ? "ok" : "fail", e0 && e1 ? `from ${loss(e0).toFixed(2)} to ${loss(e1).toFixed(2)} in ${e1.step} steps (${e1.seconds.toFixed(1)} seconds of sums)` : "no measurements arrived");
 
         set("writes", "run");
-        const got = await until(() => box.samples.length >= 2, 25000, 200);
+        // a page written after the loss fell, not one from the first few steps
+        const got = await until(() => box.samples.length >= 2 && box.samples[box.samples.length - 1].step >= e1.step, 30000, 200);
         const s0 = box.samples[0], s1 = box.samples[box.samples.length - 1];
         const writesOk = got && s0 && s1 && s0.text !== s1.text && s1.text.indexOf(" ") >= 0;
         set("writes", writesOk ? "ok" : "fail", s1 ? "latest: " + JSON.stringify(tidy(s1.text).slice(0, 60)) : "no writing arrived");

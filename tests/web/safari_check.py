@@ -102,7 +102,20 @@ def main() -> int:
         js("window.__fpErrors = [];"
            "window.addEventListener('error', e => window.__fpErrors.push('error: ' + (e.message || '?')));"
            "window.addEventListener('unhandledrejection', e => window.__fpErrors.push('promise: ' + ((e.reason && e.reason.message) || e.reason)));"
-           "document.addEventListener('securitypolicyviolation', e => window.__fpErrors.push('policy: ' + e.violatedDirective + ' ' + e.blockedURI));")
+           "document.addEventListener('securitypolicyviolation', e => window.__fpErrors.push('policy: ' + e.violatedDirective + ' ' + e.blockedURI"
+           " + ' at ' + (e.sourceFile || '?').split('/').pop() + ':' + e.lineNumber + ' on <' + ((e.target && e.target.nodeName) || '?').toLowerCase()"
+           " + ' class=\"' + ((e.target && e.target.className && e.target.className.baseVal !== undefined ? e.target.className.baseVal : (e.target && e.target.className)) || '') + '\">'));")
+
+        seen = 0
+
+        def reports(after: str) -> None:
+            """Say when the browser reported something, so a report can be tied to the step that caused it."""
+            nonlocal seen
+            now = js("return window.__fpErrors")
+            for line in now[seen:]:
+                print(f"       (browser report after {after}: {line})", flush=True)
+            seen = len(now)
+
         check(kinds() == ["transformer"], "opens with one transformer layer on the worksheet")
 
         # ---- without dragging: tap to add, arrow buttons, the keyboard
@@ -111,22 +124,29 @@ def main() -> int:
         check(kinds() == ["transformer", "attention", "feed_forward"], "tapping a block in the tray adds it at the end")
         block(2, "[data-act=up]").click()
         check(kinds() == ["transformer", "feed_forward", "attention"], "the arrow button moves a block up")
-        js("arguments[0].focus()", block(0))
-        ActionChains(driver).key_down(Keys.ALT).send_keys(Keys.ARROW_DOWN).key_up(Keys.ALT).perform()
-        time.sleep(0.3)
-        check(kinds() == ["feed_forward", "transformer", "attention"], "Alt and the down arrow move the block that has the keyboard")
         check("moved to position" in text(".bld .sr"), "screen readers are told what moved")
+        reports("the buttons")
+        before = kinds()
+        js("arguments[0].focus()", block(0))
+        block(0).send_keys(Keys.ALT, Keys.ARROW_DOWN)
+        time.sleep(0.4)
+        check(kinds() == [before[1], before[0], before[2]], f"Alt and the down arrow move the block that has the keyboard ({', '.join(kinds())})")
+        reports("the keyboard")
 
         # ---- with a mouse
+        before = kinds()
         drag(block(0), block(2), 30)
-        check(kinds() == ["transformer", "attention", "feed_forward"], "mouse: dragging a block re-orders the stack")
+        check(kinds() == before[1:] + before[:1], f"mouse: dragging a block re-orders the stack ({', '.join(kinds())})")
+        reports("the first drag")
+        before = kinds()
         drag(one(".bld-piece.attention"), block(0), -30)
-        check(kinds() == ["attention", "transformer", "attention", "feed_forward"], "mouse: a block dragged from the tray lands where it was dropped")
+        check(kinds() == ["attention"] + before, "mouse: a block dragged from the tray lands where it was dropped")
+        reports("the drag from the tray")
         drag(block(0), one(".bld-tray"), 0)
-        check(kinds() == ["transformer", "attention", "feed_forward"], "mouse: dropped on the tray, the block is taken off")
-        code = text("#code")
-        check(code == "fp1-w64-h4-c64-taf" and driver.current_url.endswith("?d=fp1-w64-h4-c64-taf"),
-              f"the design code and the page address follow the design ({code})")
+        check(kinds() == before, "mouse: dropped on the tray, the block is taken off")
+        reports("the drag to the bin")
+        code, want = text("#code"), "fp1-w64-h4-c64-" + "".join(k[0] for k in kinds())
+        check(code == want and driver.current_url.endswith("?d=" + want), f"the design code and the page address follow the design ({code})")
         selects = driver.find_elements(By.CSS_SELECTOR, ".bld-reader select")
         Select(selects[0]).select_by_value("48")
         time.sleep(0.3)
@@ -135,7 +155,9 @@ def main() -> int:
         check(offered == ["1", "2", "4", "8"] and "w48" in text("#code"), "width 48 offers only head counts that work with it")
         Select(driver.find_elements(By.CSS_SELECTOR, ".bld-reader select")[0]).select_by_value("64")
         time.sleep(0.3)
+        reports("the drop-downs")
         shot("built")
+        reports("the first screenshot")
 
         # ---- the network, learning in the page
         one("#go").click()
@@ -155,7 +177,9 @@ def main() -> int:
         check(count("#viz svg path.line") == 2, "the chart draws both lines")
         now = text("#writing")
         check(now != first and " " in now, "its writing changed and has spaces in it: " + json.dumps(now[:48]))
+        reports("learning")
         shot("learning")
+        reports("the second screenshot")
         one("#tryIn").send_keys("To be, or ")
         one("#tryBtn").click()
         carried = wait_until(lambda: len(text("#writing")) > 60, 20)
@@ -169,6 +193,7 @@ def main() -> int:
         check(wait_until(lambda: text("#go") == "Start this new design", 5), "changing the design stops the old network and offers to start the new one")
         one("#go").click()
         check(wait_until(lambda: "steps so far" in text("#status"), 30), "the new design trains too")
+        reports("the new design")
         problems = js("return window.__fpErrors")
         check(not problems, "no script errors and nothing blocked by the page's security policy" + ("" if not problems else ": " + " | ".join(problems[:3])))
         shot("end")
