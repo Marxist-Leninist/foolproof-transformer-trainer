@@ -4,6 +4,7 @@ name: Real Safari and phone simulator
 # covers what those cannot:
 #   - Safari itself, the one that ships with macOS, driven through Apple's safaridriver
 #   - Safari on an iPhone, in Apple's simulator, running the site's own self-check page (docs/check.html)
+#   - Chrome on an Android phone, in Google's emulator, running the same page
 # and it runs that self-check page in Chromium, Firefox and WebKit so the page itself is known to be sound.
 # A simulator is not a phone in the hand: for that, open check.html on the phone.
 
@@ -123,6 +124,39 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: iphone-simulator
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+          retention-days: 14
+
+  android-emulator:
+    name: Chrome on an Android emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Let the emulator use hardware virtualisation
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: The self-check page in the emulator's Chrome
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: bash tests/web/android_emulator.sh
+      - name: Keep the picture and the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-emulator
           path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
           retention-days: 14
