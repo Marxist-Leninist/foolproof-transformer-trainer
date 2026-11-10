@@ -686,7 +686,7 @@
       }, 250);
     };
     const builder = window.FPBuilder.mount(host, { design: d.architecture, limits: FD.APP, vocab: ds.vocab_size,
-      words: { unit: "piece of text", units: "pieces of text" },
+      words: { unit: "piece of text", units: "pieces of text", count: "connections" },
       onChange: (design, reason, problem) => { d.architecture = design; d.problem = problem; check(); } });
     d.architecture = builder.get(); d.problem = builder.problem();
     check();
@@ -1070,6 +1070,11 @@
     ["How far back it looks", "How many pieces of text it can keep in view while guessing the next one.", "The real word is “context length”."],
     ["Creativity", "How adventurous it is when choosing each next piece. Low gives safe, repetitive writing; high gives surprising, messier writing.", "The real word is “temperature”."],
     ["Transformer", "The design of the brain: the same design behind ChatGPT and friends, only far smaller here.", "The “T” in GPT."],
+    ["Blocks", "The brain is a stack of blocks. Text goes in at the top, passes through each block in turn, and a guess at the next piece comes out at the bottom. With “Build it yourself” you choose the blocks and their order.", "The real word for the whole stack is the “architecture”."],
+    ["Attention", "A block that looks back over everything read so far and picks out the pieces that matter for the next guess. Without one, the brain can only see the piece it is on.", "The real word is “self-attention”. “Heads” are how many things it looks for at once."],
+    ["Feed-forward", "A block that works something out from what attention found. Most of what the brain learns is kept in these.", "Also called an “MLP”."],
+    ["Transformer layer", "One Attention block followed by one Feed-forward block: the pair that every modern language AI repeats many times over.", "Also called a “transformer block”."],
+    ["Width", "How many numbers the brain uses to describe each piece of text on its way down the stack. Wider can hold more, and costs more time and memory.", "The real words are “embedding size” or “hidden size”."],
   ];
   function glossary() {
     const close = () => { S.glossary = false; render(); };

@@ -196,6 +196,8 @@ In the app, at **How big a brain?**, choose **Build it yourself**. On the
 [website](https://marxist-leninist.github.io/foolproof-transformer-trainer/) it is the first thing on the page.
 It is the same builder in both places.
 
+![The website: blocks stacked on a worksheet, and under it the network's own writing after a minute of learning](docs/screenshots/builder.png)
+
 - **Drag** a block from the tray onto the worksheet, drag blocks up and down to re-order them, and
   drag one back to the tray to take it off. With a mouse, drag from anywhere on a block; on a
   touch screen, drag by its dotted handle (so the page still scrolls under your finger).

@@ -63,7 +63,7 @@
   function mount(host, opts) {
     opts = opts || {};
     const limits = opts.limits || D.WEB;
-    const words = Object.assign({ unit: "letter", units: "letters" }, opts.words);
+    const words = Object.assign({ unit: "letter", units: "letters", count: "numbers to learn" }, opts.words);
     let vocab = opts.vocab || 65;
     let design = D.fix(opts.design || D.classic(1, D.defaultHeads(limits.defaultWidth, limits), limits.defaultWidth, limits.defaultContext), limits);
     const twoIcons = () => h("span", { class: "bld-ico two" }, ICON.attention(), ICON.feed_forward());
@@ -140,7 +140,7 @@
         h("span", { text: design.heads === 1 ? " thing at a time." : " things at once." }));
       stack.replaceChildren(...(design.blocks.length ? design.blocks.map(blockEl)
         : [h("li", { class: "bld-empty", text: "Nothing here yet. Drag a block onto this spot, or tap one." })]));
-      count.replaceChildren(h("b", { text: big(D.countParams(design, vocab)) }), " numbers to learn");
+      count.replaceChildren(h("b", { text: big(D.countParams(design, vocab)) }), " " + words.count);
       say.textContent = D.describe(design);
       const atMax = design.blocks.length >= limits.maxBlocks, trouble = problem();
       for (const p of tray.querySelectorAll(".bld-piece")) p.disabled = atMax;

@@ -51,10 +51,11 @@ def check(ok: bool, what: str) -> None:
 
 
 def shot(page, name: str, full: bool = False) -> None:
-    if SHOTS:
+    # No pictures in WebKit: to take one there Playwright adds a <style> element to the page,
+    # which the page's Content-Security-Policy refuses (as it should) and reports as an error.
+    # caret="initial" stops the other engines needing one.
+    if SHOTS and ENGINE != "webkit":
         Path(SHOTS).mkdir(parents=True, exist_ok=True)
-        # caret="initial": otherwise Playwright hides the text cursor by adding a <style> to the page,
-        # which the page's own Content-Security-Policy (rightly) refuses in WebKit
         page.screenshot(path=str(Path(SHOTS) / f"{ENGINE}-{name}.png"), full_page=full, caret="initial")
 
 
