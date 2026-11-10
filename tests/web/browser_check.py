@@ -53,7 +53,9 @@ def check(ok: bool, what: str) -> None:
 def shot(page, name: str, full: bool = False) -> None:
     if SHOTS:
         Path(SHOTS).mkdir(parents=True, exist_ok=True)
-        page.screenshot(path=str(Path(SHOTS) / f"{ENGINE}-{name}.png"), full_page=full)
+        # caret="initial": otherwise Playwright hides the text cursor by adding a <style> to the page,
+        # which the page's own Content-Security-Policy (rightly) refuses in WebKit
+        page.screenshot(path=str(Path(SHOTS) / f"{ENGINE}-{name}.png"), full_page=full, caret="initial")
 
 
 def kinds(page) -> list[str]:
@@ -87,7 +89,12 @@ def wait_until(test, seconds: float, every: float = 0.2) -> bool:
 
 def watch(page) -> list[str]:
     problems: list[str] = []
-    page.on("console", lambda m: problems.append(f"{m.type}: {m.text}") if m.type in ("error", "warning") else None)
+    def note(m):
+        if m.type in ("error", "warning"):
+            where = m.location or {}
+            problems.append(f"{m.type}: {m.text} (at {where.get('url', '?')}:{where.get('lineNumber', '?')})")
+
+    page.on("console", note)
     page.on("pageerror", lambda e: problems.append(f"page error: {e}"))
     return problems
 
@@ -171,6 +178,8 @@ def site(browser) -> None:
         check(wait_until(lambda: page.inner_text("#go") == "Start this new design", 5), "changing the design stops the old network and offers to start the new one")
         page.click("#go")
         check(wait_until(lambda: "steps so far" in page.inner_text("#status"), 30), "the new design trains too")
+        compared = wait_until(lambda: page.locator("#versus").is_visible() and page.locator("#viz svg path.line").count() == 3, 25)
+        check(compared and "your last design scored" in page.inner_text("#versus"), "the chart compares it with the design before: " + json.dumps(page.inner_text("#versus")[:90]))
         # your own words
         page.click("#own summary")
         own = ("the cat sat on the mat. the dog sat on the log. a cat and a dog sat on a mat and a log. " * 40)

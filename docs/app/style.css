@@ -246,6 +246,7 @@ textarea { min-height: 120px; resize: vertical; font-family: var(--hand); line-h
 .viz .endlabel { fill: var(--ink); font-weight: 700; }
 .viz .s1 { stroke: var(--series-1); } .viz .s2 { stroke: var(--series-2); }
 .viz path.line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.viz path.line.s3 { stroke: var(--ink-3); stroke-width: 1.6; stroke-dasharray: 5 5; }
 .viz circle.end { stroke: var(--sheet); stroke-width: 2; }
 .viz .cross { stroke: var(--ink-3); stroke-width: 1; }
 .tip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; line-height: 1.35; min-width: 150px; z-index: 5; }

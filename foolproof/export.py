@@ -97,6 +97,9 @@ def model_card(cfg: dict, public: dict, extra: str) -> str:
     params = public.get("params") or 0
     when = time.strftime("%Y-%m-%d", time.localtime(cfg.get("created", time.time())))
     kind = "chat" if public["chat"] else "text-continuation"
+    kinds = m.get("block_types")  # a hand-built design: say which blocks, in order
+    shape = (f"{len(kinds)} blocks built by hand ({', '.join(k.replace('_', '-') for k in kinds)})" if kinds
+             else f"{m['n_layer']} layers")
     lines = [
         "---", "tags:", "- text-generation", "- foolproof-trainer", "- from-scratch", "---", "",
         f"# {cfg.get('name', 'My AI')}", "",
@@ -105,7 +108,7 @@ def model_card(cfg: dict, public: dict, extra: str) -> str:
         "", "| | |", "|---|---|",
         f"| Trained on | {public.get('trained_on') or 'custom text'} |",
         f"| Data licence | {public.get('data_licence') or 'not stated'} |",
-        f"| Size | {m['n_layer']} layers, width {m['n_embd']}, {m['n_head']} heads, context {m['block_size']} tokens |",
+        f"| Size | {shape}, width {m['n_embd']}, {m['n_head']} heads, context {m['block_size']} tokens |",
         f"| Vocabulary | {m['vocab_size']:,} tokens ({(public.get('tokenizer') or {}).get('kind', '?')}) |",
         f"| Training steps | {public.get('steps') or '?'} |",
         f"| Best validation loss | {public.get('best_val_loss') or '?'} |",

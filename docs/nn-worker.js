@@ -128,7 +128,7 @@ function loop() {
       do { trainStep(); } while (performance.now() < until);
       seconds += (performance.now() - t0) / 1000;
       if (seconds >= nextTick) { tick(false); nextTick = seconds + 0.25; }
-      if (seconds >= nextEval) { evaluate(); nextEval = seconds + (seconds < 20 ? 2 : seconds < 120 ? 4 : 8); }
+      if (seconds >= nextEval) { evaluate(); nextEval = seconds + (seconds < 10 ? 1 : seconds < 40 ? 2 : seconds < 180 ? 4 : 8); }
       if (seconds >= nextSample && !job) {
         postMessage({ type: "sample", step, seconds, text: write("", 210, 0.8) });
         nextSample = seconds + (seconds < 12 ? 2 : seconds < 60 ? 4 : 8);

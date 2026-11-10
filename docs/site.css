@@ -13,6 +13,8 @@
 
 .legend i.k1 { border-color: var(--series-1); }
 .legend i.k2 { border-color: var(--series-2); }
+.legend i.k3 { border-color: var(--ink-3); border-top-style: dashed; border-top-width: 2px; width: 26px; }
+#versus { color: var(--ink-2); }
 details.adv.plain { border: 0; padding: 0; }
 .numbox { max-height: 220px; overflow: auto; }
 .paper-body .said { color: var(--ink); }

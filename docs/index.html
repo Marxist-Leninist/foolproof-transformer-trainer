@@ -66,8 +66,9 @@
         <div class="viz" id="viz">
           <div class="viz-title">How wrong its guesses are</div>
           <div class="viz-sub">Lower is better. This number is called the “loss”.</div>
-          <div class="legend"><span><i class="k1"></i>Text it studies</span><span><i class="k2"></i>Text it has never seen</span></div>
+          <div class="legend"><span><i class="k1"></i>Text it studies</span><span><i class="k2"></i>Text it has never seen</span><span id="ghostKey" class="hidden"><i class="k3"></i>Your last design</span></div>
         </div>
+        <p class="small hidden" id="versus" role="status"></p>
         <details class="adv plain"><summary class="small">Show the numbers</summary>
           <div class="numbox"><table class="nums"><thead><tr><th>When</th><th>Text it studies</th><th>Text it has never seen</th></tr></thead><tbody id="nums"></tbody></table></div>
         </details>

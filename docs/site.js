@@ -22,6 +22,7 @@
     worker: null, run: 0, state: "idle",    // idle | starting | running | paused | stale | failed
     info: null, tick: null, m: [], e: [], samples: [], pick: -1, stage: 0,
     asked: null, restAt: REST_AFTER, lastDraw: 0, seed: 1, slowTold: false,
+    prev: null,                             // the run before this one, to compare designs: { points, code, text }
   };
 
   // ------------------------------------------------------------------ small helpers
@@ -74,6 +75,11 @@
   async function start() {
     stopWorker();
     const run = ++S.run;
+    // keep the run that is being replaced, so the chart can show whether the new design does better
+    const scored = S.e.filter(p => (p.val != null ? p.val : p.train) != null);
+    if (scored.length >= 3 && S.ranDesign) S.prev = { points: scored.map(p => ({ t: p.t, v: p.val != null ? p.val : p.train })), code: D.code(S.ranDesign), text: S.ranText };
+    S.ranDesign = S.design; S.ranText = S.own ? "own:" + S.own.length : "shakespeare";
+    if (S.prev && S.prev.text !== S.ranText) S.prev = null;     // a different text is a different exam: no comparing
     Object.assign(S, { state: "starting", info: null, tick: null, m: [], e: [], samples: [], pick: -1, stage: 0, asked: null, restAt: REST_AFTER, slowTold: false });
     $("hint").classList.add("hidden");
     drawAll();
@@ -209,7 +215,20 @@
     if (!force && now - S.lastDraw < 1200) return;
     if (viz.matches(":hover") && S.m.length > 2 && !force) return;    // do not pull the chart from under a pointer
     S.lastDraw = now;
-    window.FPChart.draw(viz, S.m, S.e, SERIES);
+    window.FPChart.draw(viz, S.m, S.e, SERIES.concat("Your last design"), S.prev ? S.prev.points : null);
+    $("ghostKey").classList.toggle("hidden", !S.prev);
+    drawVersus();
+  }
+  /* The chart's comparison in one plain sentence: this design against the one before, at the same moment. */
+  function drawVersus() {
+    const box = $("versus"), last = S.e[S.e.length - 1];
+    const mine = last ? (last.val != null ? last.val : last.train) : null;
+    const then = S.prev && last ? S.prev.points.filter(p => p.t <= last.t + 0.5).pop() : null;
+    if (mine == null || !then || S.e.length < 3 || last.t - then.t > 6) { box.classList.add("hidden"); return; }
+    const gap = then.v - mine, same = S.prev.code === D.code(S.ranDesign);
+    box.textContent = `After the same time, ${same ? "your last go with this design" : "your last design"} scored ${then.v.toFixed(2)}; this one scores ${mine.toFixed(2)}. ` +
+      (Math.abs(gap) < 0.03 ? "About the same." : gap > 0 ? "Lower is better, so this one is ahead." : "Lower is better, so this one is behind, for now.");
+    box.classList.remove("hidden");
   }
   function drawNumbers() {
     $("nums").replaceChildren(...S.e.slice(-200).reverse().map(p => {

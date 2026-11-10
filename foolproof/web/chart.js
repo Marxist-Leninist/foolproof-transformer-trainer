@@ -35,8 +35,10 @@
     return (sec / 3600).toFixed(1) + " hours in";
   }
 
-  /* host: the .viz element.  m: [{t, loss}]  e: [{t, train, val}] */
-  function draw(host, m, e, names) {
+  /* host: the .viz element.  m: [{t, loss}]  e: [{t, train, val}]
+     ghost (optional): [{t, v}], an earlier run to compare with, drawn as a quiet dashed line
+     and only as far along as the present run has got. */
+  function draw(host, m, e, names, ghost) {
     const W = 560, H = 250, L = 40, R = 52, T = 12, B = 30;
     const train = thin(m.filter(p => p.loss != null), 400).map(p => ({ t: p.t, v: p.loss }));
     const val = e.filter(p => p.val != null).map(p => ({ t: p.t, v: p.val }));
@@ -50,11 +52,12 @@
       return;
     }
     const tmax = Math.max(train[train.length - 1].t, val.length ? val[val.length - 1].t : 0, 1);
+    const past = (ghost || []).filter(p => p.v != null && p.t <= tmax * 1.001);
     const unit = timeUnit(tmax);
     // Keep the interesting part readable: the first seconds drop off a cliff, so cap the top
     // of the scale at where things stood 3% of the way in (everything above is clipped).
     const tCut = tmax > 90 ? tmax * 0.03 : 0;
-    const visible = train.filter(p => p.t >= tCut).concat(val.filter(p => p.t >= tCut));
+    const visible = train.filter(p => p.t >= tCut).concat(val.filter(p => p.t >= tCut), past.filter(p => p.t >= tCut));
     let lo = Math.min(...visible.map(p => p.v)), hi = Math.max(...visible.map(p => p.v));
     if (hi - lo < 0.05) { hi += 0.05; lo -= 0.05; }
     const step = niceStep(hi - lo, 4);
@@ -66,7 +69,8 @@
 
     const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", tabindex: "0",
       "aria-label": `Line chart of how wrong its guesses are over time. ${names[0]}: now ${train[train.length - 1].v.toFixed(2)}.` +
-        (val.length ? ` ${names[1]}: now ${val[val.length - 1].v.toFixed(2)}.` : "") + " Lower is better." });
+        (val.length ? ` ${names[1]}: now ${val[val.length - 1].v.toFixed(2)}.` : "") +
+        (past.length ? ` ${names[2] || "Earlier run"}: ${past[past.length - 1].v.toFixed(2)} at the same moment.` : "") + " Lower is better." });
     const grid = s("g", { class: "grid" }), axis = s("g", { class: "axis" });
     for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
       grid.append(s("line", { x1: L, x2: W - R, y1: y(v), y2: y(v) }));
@@ -82,6 +86,7 @@
     svg.append(s("clipPath", { id: clip }, s("rect", { x: L, y: T - 2, width: W - L - R + 2, height: H - T - B + 4 })));
     const path = pts => pts.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p.v).toFixed(1)).join("");
     const lines = s("g", { "clip-path": `url(#${clip})` });
+    if (past.length > 1) lines.append(s("path", { class: "line s3", d: path(past) }));
     lines.append(s("path", { class: "line s1", d: path(train) }));
     if (val.length > 1) lines.append(s("path", { class: "line s2", d: path(val) }));
     svg.append(lines);
@@ -115,6 +120,7 @@
       tip.append(when);
       const rows = [[names[0], nearest(train, tt), "var(--series-1)"]];
       if (val.length) rows.push([names[1], nearest(val, tt), "var(--series-2)"]);
+      if (past.length) rows.push([names[2] || "Earlier run", nearest(past, tt), "var(--ink-3)"]);
       for (const [name, p, color] of rows) {
         const row = document.createElement("div");
         const key = document.createElement("i"); key.style.borderColor = color;
