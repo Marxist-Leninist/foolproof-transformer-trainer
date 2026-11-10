@@ -1,4 +1,4 @@
-name: Real Safari and phone simulator
+name: Real Safari and phone simulators
 
 # The main browser checks (site.yml) use the engines a test library can install on Linux. This workflow
 # covers what those cannot:

@@ -124,10 +124,20 @@ what has been done about each, and what is still open.
 - A simulator is real Safari for iPhone, but it is not a phone in the hand, and its "drag" is the
   page's own pointer events rather than a finger.
 
+### Chrome on an Android phone, in Google's emulator
+- The same workflow boots an Android emulator and opens the self-check page in the Chrome that ships
+  with its system image (`tests/web/android_emulator.sh`). First green run: Chrome 113 on Android 14
+  (a Pixel 6 profile), 9 of 9 checks, WebAssembly loops, about 7 learning steps a second on GitHub's
+  shared machine. The emulator's screen is kept as a picture with each run.
+- That Chrome is from 2023, which makes it a useful floor: the site works on a three-year-old
+  browser, not only on this month's.
+- As with the iPhone simulator, this is the real browser but not a phone in the hand. The emulator
+  describes its main pointer as a mouse, and the drag is the page's own pointer events.
+
 ### A phone or tablet in the hand
 - Open <https://marxist-leninist.github.io/foolproof-transformer-trainer/check.html> on the device.
   The automatic checks take about half a minute. One more check waits for a real finger: drag a block
   by its handle and the page says whether that worked.
 - Results from real devices belong in the list below, with the text the page offers to copy.
-  As of this writing nobody has reported one, so physical phones and tablets, Android included,
+  As of this writing nobody has reported one, so physical phones and tablets, iPhone and Android alike,
   are still unverified.

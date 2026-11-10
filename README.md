@@ -187,8 +187,8 @@ train a miniature AI (a ready-made size, and a hand-built design through the app
 chat with it and shut down.
 
 The builder and the website have their own checks ([workflow](.github/workflows/site.yml)), and a
-[second workflow](.github/workflows/devices.yml) runs the website in Safari on a Mac and in Safari on
-an iPhone simulator:
+[second workflow](.github/workflows/devices.yml) runs the website in Safari on a Mac, in Safari on
+an iPhone simulator and in Chrome on an Android emulator:
 
 ```
 node tests/web/test_nn.js                  # the in-page network: gradients, design rules, WebAssembly vs JavaScript
