@@ -10,6 +10,7 @@ name: Real Safari and phone simulators
 
 on:
   push:
+    branches: [main]
     paths: ["docs/**", "foolproof/web/**", "tests/web/**", ".github/workflows/devices.yml"]
   pull_request:
     paths: ["docs/**", "foolproof/web/**", "tests/web/**", ".github/workflows/devices.yml"]

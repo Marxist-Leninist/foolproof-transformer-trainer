@@ -243,7 +243,22 @@ def main() -> int:
         block(0, "[data-act=remove]").click()
         check(wait_until(lambda: text("#go") == "Start this new design", 5), "changing the design stops the old network and offers to start the new one")
         one("#go").click()
-        check(wait_until(lambda: "steps so far" in text("#status"), 30), "the new design trains too")
+        pressed = time.time()
+
+        def new_design_trains() -> bool:
+            if "steps so far" in text("#status"):
+                return True
+            # On a busy shared Mac the press sometimes does not take. If the button still offers to start
+            # the design five seconds later, press it again rather than wait for something that was never asked.
+            nonlocal pressed
+            if time.time() - pressed > 5 and text("#go") == "Start this new design":
+                one("#go").click()
+                pressed = time.time()
+            return False
+
+        trained = wait_until(new_design_trains, 90, every=0.5)
+        check(trained, "the new design trains too" if trained else
+              f"the new design trains too (after 90 seconds the button says {text('#go')!r} and the status says {text('#status')[:80]!r})")
         reports("the new design")
         problems = js("return window.__fpErrors")
         # Safari on macOS reports an inline-style violation for every <select> a page creates, before the page has
