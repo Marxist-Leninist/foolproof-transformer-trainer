@@ -323,3 +323,22 @@ table.nums th:first-child, table.nums td:first-child { text-align: left; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Accessible sequential decoder block builder. */
+.brain-builder { border-top:2px solid var(--rule);padding-top:24px; }
+.builder-dimensions { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px; }
+.builder-palette { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px; }
+.builder-tool { text-align:left;border:1px solid var(--rule);background:var(--sheet);padding:14px;border-radius:8px;cursor:grab; }
+.builder-tool small,.builder-block-copy small { display:block;margin-top:5px;font-weight:400;color:var(--ink-2);font-size:12px;line-height:1.5; }
+.builder-list { list-style:none;padding:0;margin:0;display:grid;gap:10px; }
+.builder-block { border:1px solid var(--rule);border-left:4px solid var(--pen);background:var(--sheet);border-radius:6px;padding:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap; }
+.builder-handle { min-width:42px;min-height:42px;background:var(--paper);border:1px solid var(--rule);border-radius:6px;cursor:grab;font-weight:700; }
+.builder-block-copy { flex:1;min-width:140px; }
+.builder-actions { flex-basis:100%;display:flex;gap:8px;flex-wrap:wrap; }
+.builder-actions button { min-height:44px;padding:6px 12px;border:1px solid var(--rule);border-radius:5px;background:var(--sheet);font:inherit;font-size:12px;cursor:pointer; }
+.builder-actions button:disabled { opacity:.45;cursor:not-allowed; }
+.builder-fixed { padding:10px 14px;border:1px solid var(--rule-soft);background:var(--paper);color:var(--ink-2);font-size:13px; }
+.builder-drop { padding:16px;text-align:center;border:2px dashed var(--rule);color:var(--ink-3);font-size:13px; }
+.builder-list .drop-target { border-top:4px solid var(--pen); }
+.builder-error { color:#a12730; }
+@media(max-width:640px){.builder-palette,.builder-dimensions{grid-template-columns:1fr}.builder-actions button{flex:1 1 40%}.builder-block{padding:12px}}

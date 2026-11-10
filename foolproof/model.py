@@ -22,6 +22,7 @@ class ModelConfig:
     n_embd: int = 384
     block_size: int = 256  # how many tokens the model can look back over
     dropout: float = 0.0
+    block_types: list[str] | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -121,13 +122,31 @@ class Block(nn.Module):
         return x
 
 
+class PartialBlock(nn.Module):
+    """A real pre-normalised residual attention or feed-forward block."""
+    def __init__(self, cfg, kind):
+        super().__init__()
+        self.kind = kind
+        self.norm = RMSNorm(cfg.n_embd)
+        self.op = Attention(cfg) if kind == "attention" else MLP(cfg)
+        self.drop = nn.Dropout(cfg.dropout)
+
+    def forward(self, x, cos, sin, cache=None):
+        h = self.norm(x)
+        h = self.op(h, cos, sin, cache) if self.kind == "attention" else self.op(h)
+        return x + self.drop(h)
+
+
 class GPT(nn.Module):
     def __init__(self, cfg: ModelConfig):
         super().__init__()
         self.cfg = cfg
         self.wte = nn.Embedding(cfg.vocab_size, cfg.n_embd)
         self.drop = nn.Dropout(cfg.dropout)
-        self.blocks = nn.ModuleList(Block(cfg) for _ in range(cfg.n_layer))
+        kinds = cfg.block_types or ["transformer"] * cfg.n_layer
+        if len(kinds) != cfg.n_layer or any(k not in ("transformer", "attention", "feed_forward") for k in kinds):
+            raise ValueError("Invalid ordered block configuration")
+        self.blocks = nn.ModuleList(Block(cfg) if k == "transformer" else PartialBlock(cfg, k) for k in kinds)
         self.norm_f = RMSNorm(cfg.n_embd)
         self.lm_head = nn.Linear(cfg.n_embd, cfg.vocab_size, bias=False)
         self.lm_head.weight = self.wte.weight  # tied: same table reads tokens in and out

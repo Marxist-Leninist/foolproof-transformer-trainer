@@ -10,13 +10,22 @@ from . import paths, presets
 
 
 def create(name: str, dataset: dict, preset_id: str, budget_sec: float, hw: dict,
-           overrides: dict | None = None, autostop: bool = True) -> dict:
+           overrides: dict | None = None, autostop: bool = True, architecture: dict | None = None) -> dict:
     """Make the folder + config for a new model and return the job for the worker."""
-    overrides = overrides or {}
+    custom = None
+    if architecture is not None:
+        from .architecture import validate
+        custom, custom_params = validate(architecture, int(dataset["vocab_size"]))
+    overrides = dict(overrides or {})
+    if custom:
+        for key in ("n_layer", "n_head", "n_embd", "block_size"):
+            overrides.pop(key, None)
     p = dict(presets.PRESET_BY_ID.get(preset_id) or presets.PRESET_BY_ID["small"])
     for k in ("n_layer", "n_head", "n_embd", "block_size", "batch", "lr"):
         if overrides.get(k):
             p[k] = type(p[k])(overrides[k])
+    if custom:
+        p.update(custom)
     if p["n_embd"] % p["n_head"] != 0 or (p["n_embd"] // p["n_head"]) % 2 != 0:
         raise ValueError("The width must divide evenly by the number of heads (and give an even number).")
     n_tokens = int(dataset.get("n_train") or 0)
@@ -29,6 +38,8 @@ def create(name: str, dataset: dict, preset_id: str, budget_sec: float, hw: dict
     model = {"n_layer": p["n_layer"], "n_head": p["n_head"], "n_embd": p["n_embd"],
              "block_size": p["block_size"], "dropout": float(dropout),
              "vocab_size": int(dataset["vocab_size"])}
+    if custom:
+        model["block_types"] = custom["block_types"]
     train = {"lr": float(p["lr"]), "batch": int(p["batch"]), "budget_sec": float(budget_sec or 0),
              "weight_decay": 0.1, "autostop": bool(autostop)}
     if overrides.get("min_steps"):
@@ -38,7 +49,7 @@ def create(name: str, dataset: dict, preset_id: str, budget_sec: float, hw: dict
         "dataset": dataset["slug"], "dataset_name": dataset.get("name"),
         "dataset_label": dataset.get("source_label"), "licence": dataset.get("licence"),
         "chat": bool(dataset.get("chat")), "preset": preset_id, "model": model, "train": train,
-        "params": presets.count_params(p["n_layer"], p["n_embd"], model["vocab_size"]),
+        "params": custom_params if custom else presets.count_params(p["n_layer"], p["n_embd"], model["vocab_size"]),
         "status": "new", "stats": {}, "sessions": 0,
         "tokenizer": dataset.get("tokenizer"), "bytes_per_token": dataset.get("bytes_per_token"),
         "sample_prompt": dataset.get("sample_prompt"),

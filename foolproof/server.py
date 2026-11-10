@@ -178,7 +178,7 @@ class App:
             try:
                 job = runs.create((body.get("name") or "").strip()[:60], ds, body.get("preset") or "small",
                                   float(body.get("budget_sec") or 0), hw, body.get("overrides") or {},
-                                  bool(body.get("autostop", True)))
+                                  bool(body.get("autostop", True)), architecture=body.get("architecture"))
             except ValueError as e:
                 raise ApiError(str(e)) from e
             try:

@@ -177,3 +177,26 @@ train a miniature AI, chat with it and shut down.
 
 [MIT](LICENSE). Bundled fonts and the Shakespeare text are listed in [THIRD-PARTY.md](THIRD-PARTY.md).
 Each dataset in the starter library has its own licence, shown next to it in the app.
+
+## Visual Transformer builder
+
+In **Brain size**, select **Build my own**. Drag blocks from the palette into the
+ordered list, or use the Add, Move up/down, Duplicate and Remove buttons on a
+touchscreen or keyboard. The selected order is the actual model trained, not a
+diagram: complete Transformer, causal attention, and feed-forward residual
+blocks are supported. Embeddings, RoPE, final normalization and tied output stay
+fixed. This is a sequential decoder builder, not arbitrary graph wiring.
+
+The server validates dimensions, head divisibility, block types and limits
+before creating a run. Limits: 1–16 blocks, width 64–768, 1–16 heads, context
+32–1,024, at least one attention-bearing block and 350M parameters maximum.
+These are validation limits, not promises that every design fits your device.
+Custom designs keep the regular training stop controls and batch-fit behavior.
+Architecture persists in checkpoints, resumed runs and exports. Preset fit
+labels apply to presets, not custom designs.
+
+Builder checks: `python -m unittest discover -s tests -v`.
+
+UI control checks: `node tests/test_builder.js` (a lightweight DOM double, not
+visual browser testing). Full custom-model HTTP test:
+`python -m foolproof.selftest --builder`.

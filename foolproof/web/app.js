@@ -665,7 +665,7 @@
     if (!d.aiName) d.aiName = `${ds.name} ${d.preset[0].toUpperCase() + d.preset.slice(1)}`.slice(0, 60);
     const preset = rec.cards.find(c => c.id === d.preset) || rec.cards[0];
     const advField = (key, label, ph, hint) => h("label", { class: "field" }, h("span", { text: label }),
-      h("input", { type: "number", step: "any", min: "0", placeholder: String(ph), value: d.adv[key] || "", oninput: e => { d.adv[key] = e.target.value; } }),
+      h("input", { type: "number", disabled: !!d.builderEnabled && ["n_layer", "n_embd", "n_head", "block_size"].includes(key), step: "any", min: "0", placeholder: String(ph), value: d.adv[key] || "", oninput: e => { d.adv[key] = e.target.value; } }),
       hint ? h("span", { class: "small muted", style: "font-weight:400", text: hint }) : null);
     const hw = S.app.hw || {};
     return h("main", { class: "narrow stack-lg" },
@@ -686,6 +686,7 @@
                 h("div", { class: "d", text: c.blurb + (fit.note ? " " + fit.note : "") })),
               h("div", { class: "meta", text: big(c.params) + " connections" })));
         }))),
+      window.FPBuilder.render(h, d, render, preset, ds.vocab_size),
       h("div", { class: "stack" }, h("h2", { text: "How long should it study?" }),
         h("div", { class: "seg", role: "group", "aria-label": "How long" }, S.app.budgets.map(b =>
           h("button", { type: "button", "aria-pressed": String(d.budget === b.seconds), onclick: () => { d.budget = b.seconds; render(); } }, b.name, h("small", { text: b.blurb })))),
@@ -696,7 +697,7 @@
         "A small AI picks up the style of what it reads: its words, its rhythm, its way of putting sentences together. It will not know facts or hold a real conversation. The chatbots you have used are around 100,000 times bigger and read a large part of the internet."),
       h("details", { class: "adv" }, h("summary", { text: "Advanced choices (you can ignore these)" }),
         h("div", { class: "stack" },
-          h("p", { class: "small muted", text: "Leave a box empty to keep the setting that comes with the brain size you picked." }),
+          h("p", { class: "small muted", text: d.builderEnabled ? "Layers, width, heads and context come from your block builder. Other training choices below still apply." : "Leave a box empty to keep the setting that comes with the brain size you picked." }),
           h("div", { class: "grid2" },
             advField("n_layer", "Layers", preset.n_layer), advField("n_embd", "Width", preset.n_embd, "Must divide by the number of heads."),
             advField("n_head", "Attention heads", preset.n_head), advField("block_size", "How far back it looks (context)", preset.block_size, "In pieces of text."),
@@ -708,7 +709,7 @@
         h("button", { class: "btn primary", text: "Start training", onclick: async () => {
           const overrides = {};
           for (const [k, v] of Object.entries(d.adv)) if (v !== "" && v != null && !isNaN(Number(v))) overrides[k] = Number(v);
-          const r = await act(() => post("/api/train", { dataset: d.dataset, preset: d.preset, name: d.aiName.trim(), budget_sec: d.budget, overrides, autostop: d.autostop }));
+          const r = await act(() => post("/api/train", { dataset: d.dataset, preset: d.preset, name: d.aiName.trim(), budget_sec: d.budget, overrides, autostop: d.autostop, architecture: window.FPBuilder.serialize(d) }));
           if (r) { await refresh(); S.draft = null; go("train", r.run); }
         } })));
   }

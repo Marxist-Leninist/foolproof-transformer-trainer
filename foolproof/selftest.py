@@ -32,7 +32,7 @@ def _drain(q):
             return out
 
 
-def _server_roundtrip(tmp: str) -> None:
+def _server_roundtrip(tmp: str, architecture=None) -> None:
     """Start the real app and use it the way the window does: over HTTP, with worker processes."""
     import socket
     import subprocess
@@ -100,7 +100,7 @@ def _server_roundtrip(tmp: str) -> None:
         ev, _ = wait_for(lambda e: e.get("type") == "job_end" and e.get("kind") == "prepare", 180)
         _check(ev is not None and ev.get("reason") == "done", "prepares text through the app")
         r = api("POST", "/api/train", {"dataset": ev["dataset"], "preset": "pocket", "name": "Server test",
-                                       "budget_sec": 6,
+                                       "budget_sec": 6, "architecture": architecture,
                                        "overrides": {"n_layer": 2, "n_head": 2, "n_embd": 64, "block_size": 64, "batch": 16,
                                                      "min_steps": 60}})
         run = r["run"]
@@ -114,6 +114,9 @@ def _server_roundtrip(tmp: str) -> None:
         _check(ev is not None and len(text) > 5, f"the finished AI answers in the window: {text[:30]!r}")
         models = api("GET", "/api/state")["models"]
         _check(len(models) == 1 and models[0]["status"] == "finished" and models[0]["has_model"], "lists the finished AI")
+        if architecture:
+            _check(models[0]["model"]["block_types"] == [b["type"] for b in architecture["blocks"]],
+                   "the actual trained model preserves the visual builder block order")
         api("POST", "/api/quit", {})
         proc.wait(timeout=60)
         _check(proc.returncode == 0, "quits cleanly")
@@ -248,7 +251,11 @@ def main(argv=None) -> int:
     names = {p.name for p in folder.iterdir()}
     _check({"model.safetensors", "config.json", "tokenizer.json", "chat.py", "README.md"} <= names, "exports a shareable folder")
 
-    _server_roundtrip(tmp)
+    architecture = None
+    if "--builder" in argv:
+        architecture = dict(version=1,width=64,heads=2,context=64,
+                            blocks=[{"type":"attention"},{"type":"feed_forward"},{"type":"transformer"}])
+    _server_roundtrip(tmp, architecture)
 
     if online:
         from . import hub
