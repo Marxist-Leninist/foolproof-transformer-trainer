@@ -126,11 +126,24 @@ def main() -> int:
         check(kinds() == ["transformer", "feed_forward", "attention"], "the arrow button moves a block up")
         check("moved to position" in text(".bld .sr"), "screen readers are told what moved")
         reports("the buttons")
+        # The builder moves a block on Alt (or Ctrl) with an arrow key. safaridriver does not always hold a
+        # modifier down, so this tries the real chords first and says exactly how the key reached the page.
+        js("window.__fpKeys = []; document.addEventListener('keydown', e => window.__fpKeys.push(e.key + (e.altKey ? '+alt' : '')"
+           " + (e.ctrlKey ? '+ctrl' : '') + (e.isTrusted ? '' : ' (scripted)')), true);")
         before = kinds()
-        js("arguments[0].focus()", block(0))
-        block(0).send_keys(Keys.ALT, Keys.ARROW_DOWN)
-        time.sleep(0.4)
-        check(kinds() == [before[1], before[0], before[2]], f"Alt and the down arrow move the block that has the keyboard ({', '.join(kinds())})")
+        swapped = [before[1], before[0], before[2]]
+        how = ""
+        for label, send in (("Alt and the down arrow, typed", lambda: block(0).send_keys(Keys.ALT, Keys.ARROW_DOWN)),
+                            ("Ctrl and the down arrow, typed", lambda: block(0).send_keys(Keys.CONTROL, Keys.ARROW_DOWN)),
+                            ("Alt and the down arrow, as a scripted key event because safaridriver would not hold the modifier",
+                             lambda: js("arguments[0].dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', altKey: true, bubbles: true, cancelable: true}))", block(0)))):
+            js("arguments[0].focus()", block(0))
+            send()
+            time.sleep(0.4)
+            if kinds() == swapped:
+                how = label
+                break
+        check(bool(how), f"keyboard: {how or 'no key chord'} moves the block that has the keyboard (keys the page saw: {', '.join(js('return window.__fpKeys')) or 'none'})")
         reports("the keyboard")
 
         # ---- with a mouse
@@ -195,7 +208,17 @@ def main() -> int:
         check(wait_until(lambda: "steps so far" in text("#status"), 30), "the new design trains too")
         reports("the new design")
         problems = js("return window.__fpErrors")
-        check(not problems, "no script errors and nothing blocked by the page's security policy" + ("" if not problems else ": " + " | ".join(problems[:3])))
+        # Safari on macOS reports an inline-style violation for every <select> a page creates, before the page has
+        # touched it: the report comes from Safari's own drawing of the drop-down. Prove that here with a bare
+        # element the site never sees, and only then leave those reports out. Anything else still fails.
+        js("window.__fpProbe = window.__fpErrors.length; document.body.append(document.createElement('select')); document.body.lastChild.remove();")
+        time.sleep(0.5)
+        quirk = js("return window.__fpErrors.length - window.__fpProbe") > 0
+        own = [p for p in problems if not (quirk and p.startswith("policy: style-src-attr inline") and "<select" in p)]
+        if quirk:
+            print(f"       (Safari reports an inline-style violation for a bare document.createElement('select'); "
+                  f"{len(problems) - len(own)} such reports on the builder's drop-downs are Safari's own and are not counted)", flush=True)
+        check(not own, "no script errors, and nothing of the site's own blocked by the page's security policy" + ("" if not own else ": " + " | ".join(own[:3])))
         shot("end")
     finally:
         driver.quit()
