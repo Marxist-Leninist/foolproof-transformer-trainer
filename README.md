@@ -126,6 +126,12 @@ Nothing else is installed anywhere and nothing is added to your system settings.
 Start it with `--lan` (for example `START-WINDOWS.bat --lan`). It prints a private link to open on
 a phone that is on the same Wi-Fi. Only someone with that link can get in.
 
+**The website does not work on my phone or tablet.**
+Open the [device check](https://marxist-leninist.github.io/foolproof-transformer-trainer/check.html) on it.
+In about half a minute it says which parts work on that device and which do not. Copy the result from
+the bottom of that page into an
+[issue](https://github.com/Marxist-Leninist/foolproof-transformer-trainer/issues).
+
 **Something went wrong.**
 Run the launcher with `--selftest` (for example `START-WINDOWS.bat --selftest`). It checks every
 part in about a minute and says which one failed. Then
@@ -180,13 +186,17 @@ Every push is tested by starting the real launchers on Windows, macOS and Linux 
 train a miniature AI (a ready-made size, and a hand-built design through the app's own window),
 chat with it and shut down.
 
-The builder and the website have their own checks ([workflow](.github/workflows/site.yml)):
+The builder and the website have their own checks ([workflow](.github/workflows/site.yml)), and a
+[second workflow](.github/workflows/devices.yml) runs the website in Safari on a Mac and in Safari on
+an iPhone simulator:
 
 ```
 node tests/web/test_nn.js                  # the in-page network: gradients, design rules, WebAssembly vs JavaScript
 python tests/web/parity.py                 # the in-page network against the app's PyTorch model
 python -m unittest discover -s tests -v    # the app's design checker and custom models
 python tests/web/browser_check.py          # website and app builder in a real browser: mouse, keyboard, touch
+python tests/web/device_check.py playwright chromium   # the device self-check page (docs/check.html)
+python tests/web/safari_check.py           # on a Mac: the website in Safari itself, through safaridriver
 python tools/sync_site.py                  # after changing foolproof/web: refresh the website's copies
 ```
 
