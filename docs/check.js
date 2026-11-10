@@ -295,6 +295,9 @@
     $("summary").value = lines.join("\n");
   }
   function send() {
+    // Finger gestures can finish before the automatic checks. Keep their evidence
+    // in state; run() sends the complete result after it clears running.
+    if (running) return;
     try {
       fetch("__report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(result()) }).catch(() => {});
     } catch (e) { /* no test server listening: nothing to do */ }
