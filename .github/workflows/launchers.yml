@@ -1,0 +1,102 @@
+name: Launchers work
+
+# Starts the app exactly the way a person would, on real Windows, macOS and Linux machines:
+# the launcher fetches Python and PyTorch, then the self-test prepares text, trains a
+# miniature AI, chats with it and shuts down.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"   # weekly, to catch breakage from new PyTorch / uv / Python releases
+
+permissions:
+  contents: read
+
+concurrency:
+  group: launchers-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unzipped-folder:
+    name: ${{ matrix.os }} / from the unzipped folder
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: First start (macOS / Linux)
+        if: runner.os != 'Windows'
+        run: ./start.sh --selftest --online
+
+      - name: Start again from a folder with spaces and odd characters (macOS / Linux)
+        if: runner.os != 'Windows'
+        run: |
+          odd="$RUNNER_TEMP/My Stuff (new) & it's here"
+          mkdir -p "$odd/clone" "$odd/unzipped"
+          cp -R . "$odd/clone"                      # a git clone: runs in place
+          "$odd/clone/start.sh" --selftest
+          git archive HEAD | tar -x -C "$odd/unzipped"   # a downloaded copy: installs itself, then runs
+          "$odd/unzipped/start.sh" --selftest
+
+      - name: First start (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: call START-WINDOWS.bat --selftest --online
+
+      - name: Start again from a folder with spaces and odd characters (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          rem a git clone: runs in place
+          xcopy /e /i /q /y /h . "%RUNNER_TEMP%\My Stuff (new) & more\clone" >nul
+          call "%RUNNER_TEMP%\My Stuff (new) & more\clone\START-WINDOWS.bat" --selftest || exit /b 1
+          rem a downloaded copy: installs itself, then runs
+          mkdir "%RUNNER_TEMP%\My Stuff (new) & more\unzipped"
+          git archive --format=tar HEAD | tar -x -C "%RUNNER_TEMP%\My Stuff (new) & more\unzipped"
+          call "%RUNNER_TEMP%\My Stuff (new) & more\unzipped\START-WINDOWS.bat" --selftest
+
+  launcher-only:
+    name: ${{ matrix.os }} / launcher file on its own
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      FOOLPROOF_REPO: ${{ github.repository }}
+      FOOLPROOF_BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run only the launcher; it downloads the rest (macOS / Linux)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p "$RUNNER_TEMP/alone"
+          cp start.sh "$RUNNER_TEMP/alone/"
+          cd "$RUNNER_TEMP/alone"
+          cat start.sh | bash -s -- --selftest
+
+      - name: Run only the launcher; it downloads the rest (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          mkdir "%RUNNER_TEMP%\alone"
+          copy START-WINDOWS.bat "%RUNNER_TEMP%\alone\" >nul
+          cd /d "%RUNNER_TEMP%\alone"
+          call START-WINDOWS.bat --selftest
+
+  intel-mac:
+    name: macos (Intel) / best effort
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./start.sh --selftest

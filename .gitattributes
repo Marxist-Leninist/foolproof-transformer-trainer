@@ -1,0 +1,7 @@
+# Windows batch files must keep Windows line endings on every platform, in every download.
+*.bat -text
+*.sh text eol=lf
+*.command text eol=lf
+*.py text eol=lf
+*.woff2 binary
+*.png binary

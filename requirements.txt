@@ -1,0 +1,9 @@
+# PyTorch is installed separately by the START launcher, so it can pick the build
+# that matches your graphics card. If you install by hand:  pip install torch  first.
+numpy>=1.26
+tiktoken>=0.7
+tokenizers>=0.19
+pyarrow>=15
+huggingface_hub>=0.24
+safetensors>=0.4
+pypdf>=4
