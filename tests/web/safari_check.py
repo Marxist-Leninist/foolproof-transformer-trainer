@@ -20,6 +20,7 @@ import functools
 import http.server
 import json
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -76,9 +77,13 @@ def main() -> int:
         kinds = lambda: js("return Array.from(document.querySelectorAll('.bld-block')).map(e => e.dataset.kind)")  # noqa: E731
 
         def shot(name: str) -> None:
+            # Two pictures: safaridriver's own, and one of the whole screen. On a machine with nobody at it
+            # safaridriver's picture can come out blank even though the page is drawn, so the screen is kept too.
             if SHOTS:
                 Path(SHOTS).mkdir(parents=True, exist_ok=True)
                 driver.save_screenshot(str(Path(SHOTS) / f"safari-{name}.png"))
+                if sys.platform == "darwin":
+                    subprocess.run(["screencapture", "-x", str(Path(SHOTS) / f"safari-screen-{name}.png")], check=False, timeout=20)
 
         def block(i: int, inner: str = ""):
             return driver.find_elements(By.CSS_SELECTOR, ".bld-block")[i].find_element(By.CSS_SELECTOR, inner) if inner \
