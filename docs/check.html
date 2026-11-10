@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check this device: Foolproof Transformer Trainer</title>
+<meta name="description" content="Runs the block builder and the in-page network on the device you are holding and shows what worked.">
+<meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="app/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app/style.css">
+<link rel="stylesheet" href="app/builder.css">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="check.css">
+</head>
+<body class="site">
+<header class="top">
+  <a class="brand" href="./"><img class="brand-mark" src="app/icon.svg" alt="" width="26" height="26">Foolproof Transformer Trainer</a>
+</header>
+<main class="chk">
+  <h1>Does the website work on this device?</h1>
+  <p class="chk-lead">This page runs the block builder and the in-page network on the phone, tablet or computer you are holding, and shows what worked. It takes about half a minute. Nothing is sent anywhere.</p>
+
+  <p id="verdict" class="chk-verdict" role="status">Starting…</p>
+  <p><button class="btn" id="again" type="button" disabled>Run the checks again</button></p>
+
+  <h2>What was checked</h2>
+  <ol id="checks" class="chk-list"></ol>
+
+  <section class="chk-finger" aria-labelledby="fingerTitle">
+    <h2 id="fingerTitle">One check needs your finger</h2>
+    <p>On a touch screen, put a finger on the handle at the edge of a block below (it says &ldquo;Drag to move&rdquo;) and drag the block above or below another one. A mouse cannot do this check.</p>
+    <p id="fingerStatus" class="chk-status" role="status">Waiting for a finger drag.</p>
+    <div id="builder"><p class="note">The builder needs JavaScript.</p></div>
+  </section>
+
+  <h2>This device</h2>
+  <dl id="facts" class="chk-facts"></dl>
+
+  <h2>Result to pass on</h2>
+  <p>If you are reporting a problem, copy this and send it with your message.</p>
+  <textarea id="summary" class="chk-summary" rows="7" readonly aria-label="Result of the checks"></textarea>
+  <p><button class="btn" id="copy" type="button">Copy the result</button> <span id="copied" role="status"></span></p>
+  <p><a href="./">Back to the builder</a></p>
+</main>
+<script src="app/design.js"></script>
+<script src="app/builder.js"></script>
+<script src="check.js"></script>
+</body>
+</html>

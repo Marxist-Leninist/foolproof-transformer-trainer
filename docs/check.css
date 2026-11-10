@@ -1,0 +1,32 @@
+/* Device self-check page (check.html). Uses the shared colours where they exist, with plain fallbacks. */
+.chk { max-width: 760px; margin: 0 auto; padding: 20px 18px 64px; }
+.chk h1 { font-size: 1.6rem; line-height: 1.25; margin: 14px 0 10px; }
+.chk h2 { font-size: 1.15rem; margin: 30px 0 10px; }
+.chk-lead { color: var(--ink-2, #44505f); max-width: 62ch; }
+.chk-verdict { font-size: 1.2rem; font-weight: 600; padding: 14px 16px; border-radius: 10px; margin: 18px 0 12px;
+  background: var(--warn-bg, #fff4d6); color: var(--ink, #1c2430); border: 1px solid rgba(0, 0, 0, 0.12); }
+.chk-verdict.good { background: #e3f4ea; border-color: var(--good, #17794a); }
+.chk-verdict.bad { background: var(--bad-bg, #fde8e8); border-color: #b3261e; }
+.chk-list { list-style: none; margin: 0; padding: 0; }
+.chk-list li { display: grid; grid-template-columns: 5.6em 1fr; gap: 4px 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+.chk-list .mark { font-weight: 700; font-variant-numeric: tabular-nums; }
+.chk-list .mark.ok { color: var(--good, #17794a); }
+.chk-list .mark.fail { color: #b3261e; }
+.chk-list .mark.run, .chk-list .mark.wait, .chk-list .mark.skip { color: var(--ink-3, #6b7785); }
+.chk-list .what { min-width: 0; }
+.chk-list .detail { grid-column: 2; color: var(--ink-2, #44505f); font-size: 0.93rem; overflow-wrap: anywhere; }
+.chk-finger { margin-top: 30px; padding: 4px 16px 18px; border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 12px;
+  background: var(--sheet, #ffffff); }
+.chk-status { font-weight: 600; }
+.chk-status.good { color: var(--good, #17794a); }
+.chk-facts { display: grid; grid-template-columns: minmax(8em, 13em) 1fr; gap: 6px 14px; margin: 0; }
+.chk-facts dt { color: var(--ink-2, #44505f); }
+.chk-facts dd { margin: 0; overflow-wrap: anywhere; }
+.chk-summary { width: 100%; box-sizing: border-box; font: 400 0.9rem/1.45 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  padding: 10px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.25); background: var(--sheet, #ffffff); color: var(--ink, #1c2430); }
+@media (max-width: 520px) {
+  .chk-list li { grid-template-columns: 4.6em 1fr; }
+  .chk-facts { grid-template-columns: 1fr; gap: 2px; }
+  .chk-facts dd { margin-bottom: 8px; }
+}
