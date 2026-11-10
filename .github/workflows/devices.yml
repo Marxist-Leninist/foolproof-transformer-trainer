@@ -32,6 +32,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: A finger drag during the checks does not send a half-finished report
+        run: node tests/web/test_report_timing.js
       - name: Install the browsers
         run: |
           python -m pip install --upgrade pip playwright

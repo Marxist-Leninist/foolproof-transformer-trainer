@@ -196,6 +196,7 @@ python tests/web/parity.py                 # the in-page network against the app
 python -m unittest discover -s tests -v    # the app's design checker and custom models
 python tests/web/browser_check.py          # website and app builder in a real browser: mouse, keyboard, touch
 python tests/web/device_check.py playwright chromium   # the device self-check page (docs/check.html)
+node tests/web/test_report_timing.js       # the self-check page reports only once its checks have finished
 python tests/web/safari_check.py           # on a Mac: the website in Safari itself, through safaridriver
 python tools/sync_site.py                  # after changing foolproof/web: refresh the website's copies
 ```
