@@ -6,6 +6,8 @@ name: Launchers work
 
 on:
   push:
+    # the website and its tests have their own workflow; a change only there cannot break a launcher
+    paths-ignore: ["docs/**", "tests/web/**", "tools/**", "**.md", ".github/workflows/site.yml"]
   pull_request:
   workflow_dispatch:
   schedule:

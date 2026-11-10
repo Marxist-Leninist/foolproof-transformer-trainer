@@ -1,8 +1,162 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="An approachable local app for training a small Transformer on your own text. Download the trainer, learn the steps, and explore the open source code."><title>Foolproof Transformer Trainer · Train something of your own</title><style>
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f7f5ef;color:#20382e;font:17px/1.65 system-ui,sans-serif}a{color:inherit}nav,main,footer{max-width:1120px;margin:auto;padding:25px}nav{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #d9dfd6;gap:20px}nav strong{font-size:17px}nav a{font-size:14px}h1{font-size:clamp(42px,7vw,76px);line-height:1.06;letter-spacing:-3px;max-width:800px;margin:28px 0}h2{font-size:32px;letter-spacing:-1px;line-height:1.2}h3{font-size:20px;margin-top:0}.eyebrow{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#53775d}.intro{max-width:670px;font-size:21px;color:#52685a}.hero{padding:40px 0 22px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}.button{display:inline-block;background:#245b3c;color:white;padding:13px 22px;text-decoration:none;border-radius:9px;font-weight:700}.secondary{background:#e4eadf;color:#254c35}.note{border-left:4px solid #799363;padding:14px 20px;background:#eaf0e3;font-size:15px}.preview{margin:35px 0 65px;border:1px solid #d1d9ce;border-radius:18px;overflow:hidden;background:white;box-shadow:0 15px 45px #20382e0b}.preview img{display:block;width:100%;height:auto}.caption{padding:12px 20px;font-size:13px;color:#586d60}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.card{background:white;border:1px solid #dde2d7;border-radius:14px;padding:25px}.number{font-size:12px;color:#637a59;text-transform:uppercase;letter-spacing:1px}.card p{font-size:15px;color:#52685a}.section{padding:28px 0 48px}.platforms{display:grid;grid-template-columns:1fr 1fr;gap:20px}li{margin:10px 0}code{font:14px ui-monospace,monospace;background:#eff2ea;padding:3px 6px;border-radius:5px;overflow-wrap:anywhere}.small{font-size:14px;color:#52685a}details{padding:18px 0;border-bottom:1px solid #d9dfd6}summary{font-weight:650;cursor:pointer}details p{max-width:850px}footer{font-size:13px;color:#5a7061;border-top:1px solid #d9dfd6;margin-top:25px}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}a:focus-visible,summary:focus-visible{outline:3px solid #e2a630;outline-offset:4px}@media(max-width:720px){.grid,.platforms{grid-template-columns:1fr}h1{letter-spacing:-1.8px}.hero{padding-top:25px}nav,main,footer{padding:20px}.intro{font-size:19px}nav strong{max-width:200px}.preview{margin-bottom:30px}}
-</style></head><body><nav><strong>Foolproof Transformer Trainer</strong><a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer">View source ↗</a></nav><main>
-<section class="hero"><div class="eyebrow">Open source · Local training</div><h1>Train something<br>of your own.</h1><p class="intro">Give a small Transformer some text, choose a size and a training time, then watch it learn. A friendly interface for exploring how language models work.</p><div class="actions"><a class="button" href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/archive/refs/heads/main.zip">Download the trainer</a><a class="button secondary" href="#start">How to start</a></div><div class="note"><strong>This website is a guide and download page.</strong> Training runs in the installed app on your computer, not on GitHub Pages. This page does not rent compute, run training, or upload your data.</div></section>
-<figure class="preview"><img src="screenshots/training.png" alt="The local trainer showing a live training chart, progress ladder and generated writing" loading="eager"><figcaption class="caption">The local app's training dashboard. Screenshot is an example, not a live training session.</figcaption></figure>
-<section class="section"><div class="eyebrow">A simple path</div><h2>From your text to your first experiment.</h2><div class="grid"><article class="card"><p class="number">01 · Choose data</p><h3>Give it something to read</h3><p>Try the included Shakespeare text, search public Hugging Face datasets, or import your own files. Check the dataset's license before using it.</p></article><article class="card"><p class="number">02 · Train locally</p><h3>Start small</h3><p>Choose a model size and time budget. Watch training and validation progress, with controls to pause or stop when you need your computer back.</p></article><article class="card"><p class="number">03 · Explore</p><h3>See what it learned</h3><p>Try text generation and compare saved samples. A small model may learn writing patterns, but fluent-looking output is not proof of factual accuracy.</p></article></div></section>
-<section class="section" id="start"><div class="eyebrow">Get started</div><h2>Download once. Train on your machine.</h2><div class="platforms"><article class="card"><h3>Windows</h3><ol><li><a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/archive/refs/heads/main.zip">Download the ZIP</a> and extract it.</li><li>Open the extracted folder and double-click <code>START-WINDOWS.bat</code>.</li><li>Review the setup, wait for dependencies, and open the local app in your browser.</li></ol><p class="small">If a security warning appears, verify the source before deciding whether to run downloaded software.</p></article><article class="card"><h3>macOS or Linux</h3><ol><li><a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/archive/refs/heads/main.zip">Download and extract the ZIP</a>.</li><li>Open a terminal in the extracted folder.</li><li>Run <code>bash start.sh</code> and wait for setup.</li></ol><p class="small">Read the launcher before running it. The repository includes full installation and troubleshooting instructions.</p></article></div><p class="small">First start needs internet and downloads Python, PyTorch and other dependencies. Allow several GB of disk space; GPU installs can be larger. Local electricity, internet and storage costs still apply. Compatibility varies: <a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/actions/workflows/launchers.yml">check the current platform tests</a> rather than assuming all hardware is supported.</p></section>
-<section class="section"><h2>Good questions, before you start.</h2><details open><summary>Does this train a frontier AI?</summary><p>No. It trains small models from scratch for experimentation. Useful general-purpose models require substantial data and compute. A short laptop run is not equivalent to a large pretrained assistant, and may generate nonsense or inaccurate content.</p></details><details><summary>What is a Hugging Face dataset?</summary><p>A dataset is a collection of examples for a model to learn from. Hugging Face hosts many collections, with different formats, licenses and access rules. Choose text you are permitted to use and inspect its preview before downloading.</p></details><details><summary>Where does my data go?</summary><p>Training takes place on the computer running the app. Public dataset search and downloads contact Hugging Face. Exporting or publishing a model is a separate action: review what you share and never include private training data or credentials accidentally.</p></details><details><summary>Can I use this website as the trainer?</summary><p>No. GitHub Pages hosts static files and does not provide the Python training backend. Download and run the local app, which opens its own browser interface. Nothing is training just because you are viewing this page.</p></details><details><summary>Where are the code and installation instructions?</summary><p><a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer">Open the GitHub repository</a> for the source, MIT license, setup guide and platform test results.</p></details></section></main><footer>Foolproof Transformer Trainer · Public project website · <a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer">GitHub</a> · No analytics or external scripts on this page.</footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foolproof Transformer Trainer: build a transformer and watch it learn</title>
+<meta name="description" content="Drag blocks to build a real transformer neural network, switch it on, and watch it learn to write, right in your browser. Then get the free app to train bigger ones on your own computer.">
+<meta property="og:title" content="Build a transformer. Watch it learn to write.">
+<meta property="og:description" content="Drag blocks, switch it on, and a real neural network learns in your browser. Free and open source.">
+<meta property="og:image" content="https://marxist-leninist.github.io/foolproof-transformer-trainer/screenshots/training.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="app/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app/style.css">
+<link rel="stylesheet" href="app/builder.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="site">
+<header class="top">
+  <a class="brand" href="./"><img class="brand-mark" src="app/icon.svg" alt="" width="26" height="26">Foolproof Transformer Trainer</a>
+  <span class="top-spacer"></span>
+  <a class="linkbtn" href="#app">Get the app</a>
+  <a class="linkbtn" href="#questions">Questions</a>
+  <a class="linkbtn" href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer">Source code</a>
+</header>
+
+<main class="stack-lg">
+  <section id="build" class="stack" aria-labelledby="build-title">
+    <h1 id="build-title">Build a transformer. Watch it learn to write.</h1>
+    <p class="lead">Drag blocks onto the worksheet and switch it on. A real neural network, the kind inside the big chatbots, starts learning from Shakespeare right here in this page. Nothing to install, and nothing leaves your device.</p>
+
+    <div id="builder"><p class="note">The builder needs JavaScript. If you can read this for more than a moment, switch JavaScript on in your browser and reload the page.</p></div>
+
+    <div class="go" id="controls">
+      <button class="btn primary" id="go" type="button">Switch it on</button>
+      <button class="btn quiet hidden" id="again" type="button">Start again from nothing</button>
+      <p id="status" class="go-status" role="status" aria-live="polite">Not switched on yet. It knows nothing.</p>
+    </div>
+    <p id="hint" class="note warn hidden"></p>
+
+    <div class="train-grid" id="lab">
+      <div class="stack">
+        <div class="paper">
+          <div class="paper-head"><span id="sheetTitle">Written by your network</span><span>after <b id="when">0 steps</b></span></div>
+          <div class="paper-body" id="writing" aria-live="off"><span class="empty">Nothing yet. Switch it on and its writing appears here: rubbish at first, then, bit by bit, something that sounds like Shakespeare.</span></div>
+          <div class="paper-foot">
+            <input type="range" id="pages" min="0" max="0" value="0" aria-label="Look back at what it wrote earlier">
+            <span class="small muted" id="pagesNote">Every few seconds it writes a fresh page. Slide back to see how it wrote before.</span>
+          </div>
+        </div>
+        <div class="stack">
+          <h3>Give it a start</h3>
+          <form class="btnrow" id="tryForm">
+            <input class="input" id="tryIn" type="text" maxlength="120" placeholder="Type the start of a line, like: To be, or" aria-label="The start of a line for it to carry on">
+            <button class="btn" type="submit" id="tryBtn" disabled>Carry on from here</button>
+          </form>
+          <button class="linkbtn hidden" id="tryBack" type="button">Back to its own writing</button>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="sheet stage">
+          <h3 id="stageTitle">Stage 1 of 5: Random noise</h3>
+          <div class="stage-boxes" id="stageBoxes"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="stage-names" id="stageNames"><span>Random noise</span><span>Letter soup</span><span>Word salad</span><span>Sentences</span><span>Fluent</span></div>
+          <p class="muted" id="stageDesc">Before it is switched on it can only guess at random. Everyone starts here.</p>
+        </div>
+        <div class="viz" id="viz">
+          <div class="viz-title">How wrong its guesses are</div>
+          <div class="viz-sub">Lower is better. This number is called the “loss”.</div>
+          <div class="legend"><span><i class="k1"></i>Text it studies</span><span><i class="k2"></i>Text it has never seen</span></div>
+        </div>
+        <details class="adv plain"><summary class="small">Show the numbers</summary>
+          <div class="numbox"><table class="nums"><thead><tr><th>When</th><th>Text it studies</th><th>Text it has never seen</th></tr></thead><tbody id="nums"></tbody></table></div>
+        </details>
+        <div class="facts" id="facts"></div>
+      </div>
+    </div>
+
+    <details class="adv" id="own">
+      <summary>Teach it your own words instead of Shakespeare</summary>
+      <div class="stack">
+        <p class="muted">Paste anything you like: a story, song words you wrote, your own messages. It stays in this page on your device; this website has no server to send it to.</p>
+        <textarea id="ownText" rows="6" placeholder="Paste at least a page of text here…" aria-label="Your own text"></textarea>
+        <div class="btnrow">
+          <button class="btn" id="ownUse" type="button" disabled>Teach it this instead</button>
+          <button class="btn quiet hidden" id="ownBack" type="button">Go back to Shakespeare</button>
+          <span class="small muted" id="ownCount">It needs at least 2,000 letters, about one page.</span>
+        </div>
+      </div>
+    </details>
+
+    <p class="note"><b>What to expect. </b>This one is tiny, a few hundred thousand numbers at most, and it learns one letter at a time. In a minute or two it picks up spelling, spacing and the look of a play. It will not make sense: sense needs a far bigger network and far more reading, which is what the app below is for.</p>
+  </section>
+
+  <section id="app" class="stack" aria-labelledby="app-title">
+    <h2 id="app-title">Now train a proper one on your own computer</h2>
+    <p class="lead">The page above is the taster. The free app does the real thing: it uses your graphics card, reads whole books or any dataset on Hugging Face, trains for five minutes or all night, and lets you chat with what you made. It has this same block builder inside.</p>
+    <figure class="shot">
+      <img src="screenshots/training.png" width="1280" height="860" loading="lazy" alt="The app while it trains: the AI's own writing on lined paper, a five-step progress ladder and a chart of its mistakes going down.">
+      <figcaption class="small muted">The app in the middle of training. A picture, not a live view.</figcaption>
+    </figure>
+
+    <div class="platforms">
+      <article class="sheet stack">
+        <h3>Windows 10 or 11</h3>
+        <ol class="howto">
+          <li><a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/archive/refs/heads/main.zip">Download the ZIP</a> and open it (double-click it in your Downloads folder).</li>
+          <li>Inside, double-click <b>START-WINDOWS.bat</b>. If Windows asks whether to <i>Extract all</i> or <i>Run</i>, choose <b>Run</b>.</li>
+          <li>Wait while the black window sets things up. Your browser then opens by itself.</li>
+        </ol>
+        <p class="small muted">If a blue box says “Windows protected your PC”, click <b>More info</b>, then <b>Run anyway</b>. Windows shows that for every program whose maker has not bought a certificate from Microsoft.</p>
+      </article>
+      <article class="sheet stack">
+        <h3>Mac or Linux</h3>
+        <ol class="howto">
+          <li>Open the <b>Terminal</b> app. On a Mac: press Cmd and Space, type Terminal, press Enter.</li>
+          <li>Copy this line, paste it into the Terminal window and press Enter:
+            <span class="codebox"><code id="oneLine">curl -fsSL https://raw.githubusercontent.com/Marxist-Leninist/foolproof-transformer-trainer/main/start.sh | bash</code><button class="btn quiet" type="button" data-copy="oneLine">Copy</button></span></li>
+          <li>Wait while it sets things up. Your browser then opens by itself.</li>
+        </ol>
+        <p class="small muted">Prefer to look first? <a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/blob/main/start.sh">Read the script</a>, or download the ZIP and run <b>start.sh</b> from it.</p>
+      </article>
+    </div>
+    <p class="small muted">The first start needs the internet and downloads Python and PyTorch: a few minutes and about 2 GB of disk, or 5 GB with an NVIDIA graphics card. After that it starts in seconds and works offline. Every change to the app is started for real on Windows, macOS and Linux machines before it counts as working: <a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/actions/workflows/launchers.yml">see the latest results</a>. Graphics-card training itself has not been checked on every kind of card.</p>
+
+    <div class="sheet stack" id="carry">
+      <h3>Take your design with you</h3>
+      <p>This is the stack you built above, as a short code. In the app, at “How big a brain?”, choose <b>Build it yourself</b> and paste it in.</p>
+      <p><span class="codebox"><code id="code">fp1-w64-h4-c64-t</code><button class="btn quiet" type="button" data-copy="code">Copy</button></span></p>
+    </div>
+  </section>
+
+  <section id="questions" class="stack" aria-labelledby="q-title">
+    <h2 id="q-title">Good questions</h2>
+    <div class="faq">
+      <details open><summary>Is the network on this page real?</summary>
+        <p>Yes. It is a transformer: an embedding table, your blocks in your order, and an output layer, with every number in it adjusted by gradient descent while you watch. It is written out by hand in JavaScript, with the heavy multiplying done in WebAssembly, and it runs on your own processor. It does the same sums as the app’s PyTorch model: an automatic test loads the same numbers into both and checks that the answers and every gradient agree to about one part in a million. <a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer/tree/main/tests/web">The tests are here.</a></p></details>
+      <details><summary>Will this make something like ChatGPT?</summary>
+        <p>No. It trains small networks from nothing, for learning and for fun. A short run on a laptop picks up the style of its text and nothing more; it may write nonsense, and what it writes is not fact. The well-known chatbots are around 100,000 times bigger and have read a large part of the internet.</p></details>
+      <details><summary>Why does it write rubbish at first?</summary>
+        <p>Because it starts with random numbers. Each step it guesses the next letter, sees the right answer, and nudges its numbers a little. First it learns which letters are common, then where spaces go, then short words, then the shape of a line. The five-step ladder shows how far it has got.</p></details>
+      <details><summary>What do the blocks do?</summary>
+        <p><b>Attention</b> lets it look back over the letters it has already read and pick out the ones that matter. <b>Feed-forward</b> is where it works something out from what it found, and where most of what it learns is kept. A <b>Transformer layer</b> is one of each, the pair every modern language model stacks up. Try it without Attention and watch it struggle: it can then only see one letter at a time.</p></details>
+      <details><summary>Where does my text go?</summary>
+        <p>Nowhere. On this page the learning happens in your browser and the page has no server to send anything to. The app also trains on your own computer; it only goes online to fetch what you ask for, such as a dataset from Hugging Face, or to publish a model if you choose to.</p></details>
+      <details><summary>What is a Hugging Face dataset?</summary>
+        <p>A dataset is a big collection of text for an AI to learn from. Hugging Face is a website where people share thousands of them for free. The app has a search box for it and shows you a preview first. Each one has its own licence, so check that before you share what you make from it.</p></details>
+      <details><summary>Where are the code and the full instructions?</summary>
+        <p><a href="https://github.com/Marxist-Leninist/foolproof-transformer-trainer">On GitHub</a>, with the MIT licence, the setup guide and the test results. It is free to use, change and share.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Foolproof Transformer Trainer is free and open source (MIT). This page uses no cookies, no tracking and no scripts from anywhere else.</p>
+</footer>
+
+<script src="app/design.js"></script>
+<script src="app/builder.js"></script>
+<script src="app/chart.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

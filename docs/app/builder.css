@@ -1,0 +1,103 @@
+/* The block builder: a cut-and-stick worksheet.
+   Cut-outs wait in the tray with a dashed "cut here" edge; once stuck on the sheet their
+   edge is solid. The red margin line of the page is the stream of numbers that every block
+   reads from and adds to, so each block is pinned to it. Uses the tokens from style.css. */
+:root {
+  --blk-a: #dce8ff;      /* blue sugar paper: attention */
+  --blk-f: #ffe6d3;      /* peach sugar paper: feed-forward */
+}
+
+.bld { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; align-items: start; }
+.bld-noselect, .bld-noselect * { user-select: none; -webkit-user-select: none; }
+
+/* ---------------------------------------------------------------- the tray of cut-outs */
+.bld-tray { position: sticky; top: 14px; display: grid; gap: 8px; }
+.bld-tray-title { font-weight: 700; font-size: 1.12rem; }
+.bld-tray-how { color: var(--ink-3); margin-top: -6px; }
+.bld-pieces { display: grid; gap: 10px; }
+.bld-piece {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: center; width: 100%; text-align: left;
+  padding: 10px 12px; border: 2px dashed var(--ink); border-radius: 4px; background: var(--blk-a); color: var(--ink);
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.bld-piece.feed_forward { background: var(--blk-f); }
+.bld-piece.transformer { background: linear-gradient(to bottom, var(--blk-a) 0 50%, var(--blk-f) 50% 100%); }
+.bld-piece:hover:not([disabled]) { border-style: solid; }
+.bld-piece[disabled] { opacity: 0.45; cursor: not-allowed; }
+.bld-words b { display: block; font-weight: 700; line-height: 1.25; }
+.bld-words small { display: block; color: var(--ink-2); font-size: 0.82rem; line-height: 1.3; }
+.bld-ico { display: grid; place-items: center; }
+.bld-ico svg { width: 32px; height: 32px; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: var(--sheet); }
+.bld-ico svg .solid { fill: var(--ink); }
+.bld-ico svg .thin { stroke-width: 1.1; }
+.bld-ico.two { grid-template-columns: 1fr; gap: 0; }
+.bld-ico.two svg { width: 22px; height: 22px; }
+.bld-full { color: var(--ink-2); }
+.bld-bin {
+  display: none; position: absolute; inset: 0; z-index: 2; justify-items: center; align-content: start; gap: 6px; text-align: center;
+  border: 2.5px dashed var(--margin); border-radius: 6px; background: var(--sheet); color: #b3262b; font-weight: 700; padding: 12px;
+}
+.bld-bin svg { width: 30px; height: 30px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.bld-can-bin .bld-bin { display: grid; }
+.bld-bin.over { background: var(--bad-bg); border-style: solid; }
+
+/* ---------------------------------------------------------------- the worksheet */
+.bld-sheet .paper-head { align-items: baseline; }
+.bld-body { padding: 18px 20px 20px 78px; display: grid; gap: 12px; }
+.bld-rail { position: relative; }
+.bld-stack { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.bld-end, .bld-block { position: relative; border: 2px solid var(--ink); border-radius: 4px; }
+/* pinned to the stream: a tick from the red margin line to the block */
+.bld-end::before, .bld-block::before { content: ""; position: absolute; left: -22px; width: 20px; top: 50%; border-top: 2px solid var(--margin); }
+.bld-end::after, .bld-block::after { content: ""; position: absolute; left: -26px; top: calc(50% - 4px); width: 10px; height: 10px; border-radius: 50%; background: var(--margin); }
+.bld-end { background: var(--sheet); padding: 9px 14px; line-height: 2.1; }
+.bld-end b { font-weight: 700; }
+.bld-pick { border: 2px solid var(--ink); border-radius: 6px; background: var(--sheet); padding: 2px 6px; font-weight: 700; min-height: 34px; cursor: pointer; }
+
+.bld-block {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 8px 10px 8px 4px; background: var(--blk-a); cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.bld-block.feed_forward { background: var(--blk-f); }
+.bld-block.transformer { background: linear-gradient(to bottom, var(--blk-a) 0 50%, var(--blk-f) 50% 100%); }
+.bld-block:focus-visible { outline-offset: 3px; }
+.bld-grip { touch-action: none; cursor: grab; display: grid; place-items: center; padding: 10px 6px; align-self: stretch; }
+.bld-grip svg { width: 14px; height: 18px; fill: var(--ink-2); }
+.bld-btns { display: flex; gap: 4px; }
+.bld-btn { width: 36px; height: 36px; border: 2px solid var(--ink); border-radius: 6px; background: var(--sheet); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.bld-btn svg { width: 18px; height: 18px; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.bld-btn[disabled] { opacity: 0.28; cursor: default; }
+.bld-btn:hover:not([disabled]) { background: var(--rule-soft); }
+.bld-empty { border: 2px dashed var(--ink-3); border-radius: 4px; padding: 20px 14px; color: var(--ink-2); text-align: center; background: var(--paper); }
+.bld-say { font-family: var(--hand); color: var(--ink-2); }
+.bld-wrong { font-family: var(--ui); color: var(--ink); background: var(--warn-bg); border-left: 4px solid var(--marker-deep); padding: 8px 12px; border-radius: 0 6px 6px 0; }
+.bld-count b { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- while something is in the air */
+.bld-slot { display: none; position: absolute; left: -4px; right: -4px; height: 8px; margin-top: -4px; border-radius: 4px; background: var(--marker); border: 2px solid var(--ink); pointer-events: none; z-index: 1; }
+.bld-slot.on { display: block; }
+.bld-ghost { position: fixed; left: 0; top: 0; z-index: 60; margin: 0; pointer-events: none; border-style: solid; overflow: hidden; box-shadow: 0 20px 30px -14px rgba(20, 33, 61, 0.6); will-change: transform; }
+.bld-lifted { opacity: 0.35; }
+.bld-dragging, .bld-dragging * { cursor: grabbing !important; }
+.bld-landed { animation: bld-land 0.26s ease-out; }
+@keyframes bld-land { from { transform: scale(1.03) rotate(-1.2deg); box-shadow: 0 14px 22px -12px rgba(20, 33, 61, 0.6); } to { transform: none; box-shadow: none; } }
+
+@media (max-width: 900px) {
+  .bld { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .bld-tray { position: relative; top: 0; }
+  .bld-pieces { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bld-piece { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 8px 10px; }
+  .bld-piece.transformer { grid-column: span 2; }
+  .bld-ico svg { width: 28px; height: 28px; }
+  .bld-body { padding: 14px 12px 16px 50px; }
+  .bld-end::before, .bld-block::before { left: -18px; width: 16px; }
+  .bld-end::after, .bld-block::after { left: -21px; }
+  .bld-block { grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "grip ico words" "grip btns btns"; row-gap: 6px; padding-right: 8px; }
+  .bld-block .bld-grip { grid-area: grip; padding: 10px 8px; }
+  .bld-block > .bld-ico { grid-area: ico; }
+  .bld-block > .bld-words { grid-area: words; }
+  .bld-block > .bld-btns { grid-area: btns; justify-content: flex-end; }
+  .bld-btn { width: 42px; height: 40px; }
+  .bld-end { line-height: 2.3; }
+}
+@media (prefers-reduced-motion: reduce) { .bld-landed { animation: none; } }

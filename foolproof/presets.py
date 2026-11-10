@@ -59,16 +59,20 @@ def dropout_for(n_tokens: int) -> float:
     return 0.0
 
 
+def biggest_worth_training(n_tokens: int) -> str:
+    """The largest ready-made size this much text can teach without it simply memorising."""
+    if n_tokens < 1_500_000:
+        return "small"
+    if n_tokens < 25_000_000:
+        return "medium"
+    if n_tokens < 300_000_000:
+        return "large"
+    return "huge"
+
+
 def recommend(hw: dict, n_tokens: int, vocab: int) -> dict:
     """Which brain size to suggest, and a fit label for each one."""
-    if n_tokens < 1_500_000:
-        data_max = "small"
-    elif n_tokens < 25_000_000:
-        data_max = "medium"
-    elif n_tokens < 300_000_000:
-        data_max = "large"
-    else:
-        data_max = "huge"
+    data_max = biggest_worth_training(n_tokens)
 
     dev = hw.get("device", "cpu")
     vram = float(hw.get("vram_gb") or 0)
@@ -103,6 +107,45 @@ def recommend(hw: dict, n_tokens: int, vocab: int) -> dict:
             note = (note + " " if note else "") + "Bigger than your text needs: it may just memorise it."
         fits[p["id"]] = {"level": level, "note": note.strip()}
     return {"recommended": rec, "fits": fits}
+
+
+def fit_custom(hw: dict, n_tokens: int, vocab: int, model: dict, params: int) -> dict:
+    """The same fit label the ready-made sizes get, for a design built by hand.
+
+    model: what architecture.validate returns (n_embd, block_size, block_types).
+    Also says which ready-made size is nearest, so its learning speed and batch size are used.
+    """
+    import math
+
+    kinds = model.get("block_types") or ["transformer"] * int(model.get("n_layer") or 1)
+    # how many full layers' worth of work each token costs (attention is the lighter half)
+    layers = sum({"transformer": 1.0, "attention": 0.4, "feed_forward": 0.6}[k] for k in kinds)
+    shape = {"n_layer": max(1, math.ceil(layers)), "n_embd": int(model["n_embd"]), "block_size": int(model["block_size"])}
+    sized = {q["id"]: count_params(q["n_layer"], q["n_embd"], vocab) for q in PRESETS}
+    nearest = min(ORDER, key=lambda i: abs(math.log(sized[i]) - math.log(max(1, params))))
+    rec = recommend(hw, n_tokens, vocab)
+    dev = hw.get("device", "cpu")
+    vram = float(hw.get("vram_gb") or 0)
+    level, note = "ok", ""
+    if dev == "cpu":
+        if params > 1.5 * sized["small"]:
+            level, note = "no", "Far too slow without a graphics card. Use a smaller width or fewer blocks."
+        elif params > 1.5 * sized[rec["recommended"]]:
+            level, note = "slow", "Will work, but slowly on this computer."
+    else:
+        amp = bool(hw.get("amp")) or dev == "mps"
+        weights = params * 16
+        per_token = layers * shape["n_embd"] * 34 * (2 if amp else 4) + vocab * 10
+        need = lambda micro: (weights + per_token * shape["block_size"] * micro) / 2**30 + 0.6  # noqa: E731
+        if need(1) > vram * 0.92:
+            level, note = "no", f"Needs about {need(1):.0f} GB of graphics memory; you have {vram:.0f} GB. Use a smaller width, a shorter memory or fewer blocks."
+        elif need(8) > vram * 0.92:
+            level, note = "slow", "Will just about fit, so it trains in small slow steps."
+    if level != "no" and params > 1.5 * sized[biggest_worth_training(n_tokens)]:
+        level = "slow" if level == "ok" else level
+        note = (note + " " if note else "") + "Bigger than your text needs: it may just memorise it."
+    return {"level": level, "note": note.strip(), "params": int(params), "preset": nearest,
+            "preset_name": PRESET_BY_ID[nearest]["name"]}
 
 
 def preset_cards(vocab: int) -> list[dict]:

@@ -5,3 +5,13 @@
 *.py text eol=lf
 *.woff2 binary
 *.png binary
+*.wasm binary
+
+# The ZIP that beginners download holds only what the app needs. The website, the tests and
+# the developer tools stay in the repository (git clone gets everything).
+/docs export-ignore
+/tests export-ignore
+/tools export-ignore
+/.github export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore

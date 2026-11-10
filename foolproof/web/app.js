@@ -90,7 +90,8 @@
   const R = {}; // live DOM references for the training screen
   function newDraft() {
     return { kind: null, starter: null, lang: "fr", hf: null, amount: null, tokenizer: "auto", dataName: "",
-             dataset: null, preset: null, budget: null, aiName: "", adv: {}, autostop: true };
+             dataset: null, preset: null, budget: null, aiName: "", adv: {}, autostop: true,
+             build: false, architecture: null, problem: "", fit: null };
   }
   function newLive(run) {
     return { run, start: null, m: [], e: [], samples: [], notices: [], metrics: null, ev: null, paused: false,
@@ -658,14 +659,64 @@
   }
 
   // ------------------------------------------------------------------ step 2: brain and time
+  /* Step 2, the hands-on way: the same cut-and-stick builder as the website, at full size.
+     What is stacked here is sent as "architecture" and is exactly what gets trained. */
+  let fitTimer = null;
+  function brainBuilder(d, ds, preset, fromPreset) {
+    const FD = window.FPDesign;
+    const host = h("div", {}), note = h("p", { class: "note", role: "status", text: "Checking it against your computer…" });
+    const code = h("b", { text: "" });
+    const showFit = () => {
+      const f = d.fit, bad = d.problem || (f && f.level === "no");
+      note.className = "note" + (d.problem ? " warn" : !f ? "" : f.level === "no" ? " bad" : f.level === "slow" ? " warn" : " good");
+      note.textContent = d.problem ? d.problem : !f ? "Checking it against your computer…"
+        : f.level === "ok" ? `This will train on your computer. It has ${big(f.params)} connections, closest to the ${f.preset_name} size.`
+        : f.level === "slow" ? `It will train, with a catch. ${f.note}` : `Too big for this computer. ${f.note}`;
+      if (R.startBtn) R.startBtn.disabled = !!bad;
+    };
+    const check = () => {
+      code.textContent = FD.code(d.architecture);
+      d.fit = null; showFit();
+      clearTimeout(fitTimer);
+      if (d.problem) return;
+      const asked = FD.code(d.architecture);
+      fitTimer = setTimeout(async () => {
+        try { const f = await post("/api/fit", { dataset: d.dataset, architecture: d.architecture }); if (S.draft === d && d.build && FD.code(d.architecture) === asked) { d.fit = f; showFit(); } }
+        catch (e) { if (S.draft === d && FD.code(d.architecture) === asked) { d.problem = e.message; showFit(); } }
+      }, 250);
+    };
+    const builder = window.FPBuilder.mount(host, { design: d.architecture, limits: FD.APP, vocab: ds.vocab_size,
+      words: { unit: "piece of text", units: "pieces of text" },
+      onChange: (design, reason, problem) => { d.architecture = design; d.problem = problem; check(); } });
+    d.architecture = builder.get(); d.problem = builder.problem();
+    check();
+    const paste = h("input", { class: "input", type: "text", maxlength: "120", placeholder: "Built one on the website? Paste its code here", "aria-label": "Design code from the website" });
+    const useCode = () => {
+      const got = FD.parse(paste.value);
+      if (!got) return toast("That is not a design code. They look like this: fp1-w64-h4-c64-tt", true);
+      builder.set(FD.fix(got, FD.APP)); paste.value = ""; toast("Design loaded.");
+    };
+    return h("div", { class: "stack" }, host, note,
+      h("form", { class: "btnrow", onsubmit: e => { e.preventDefault(); useCode(); } }, paste, h("button", { class: "btn quiet", type: "submit", text: "Use this code" })),
+      h("div", { class: "btnrow between" },
+        h("span", { class: "small muted" }, "This design’s code: ", code),
+        h("button", { class: "linkbtn", type: "button", text: `Start again from the ${preset.name} size`, onclick: () => builder.set(fromPreset()) })));
+  }
+
   function viewBrain() {
     const d = S.draft, ds = datasetBySlug(d.dataset), rec = S.rec;
     if (!rec) return h("main", { class: "narrow stack" }, steps(2), h("h1", { text: "How big a brain?" }), h("p", { class: "lead", text: "Checking what your computer can handle…" }));
     if (d.budget == null) d.budget = ds.n_train < 5e6 || (S.app.hw || {}).device === "cpu" ? 300 : 1800;
-    if (!d.aiName) d.aiName = `${ds.name} ${d.preset[0].toUpperCase() + d.preset.slice(1)}`.slice(0, 60);
+    const autoName = () => (d.build ? `${ds.name} My design` : `${ds.name} ${d.preset[0].toUpperCase() + d.preset.slice(1)}`).slice(0, 60);
+    if (!d.aiName) d.aiName = autoName();
     const preset = rec.cards.find(c => c.id === d.preset) || rec.cards[0];
+    const FD = window.FPDesign;
+    // "Build it yourself" starts from the ready-made size that is ticked, as far as the builder goes
+    const fromPreset = () => FD.fix({ width: Math.min(FD.HARD.width[1], preset.n_embd), heads: preset.n_head, context: Math.min(FD.HARD.context[1], preset.block_size),
+      blocks: Array.from({ length: Math.min(FD.HARD.maxBlocks, preset.n_layer) }, () => ({ type: "transformer" })) }, FD.APP);
+    const setMode = build => { const auto = d.aiName === autoName(); d.build = build; if (build && !d.architecture) d.architecture = fromPreset(); if (auto) d.aiName = ""; render(); };
     const advField = (key, label, ph, hint) => h("label", { class: "field" }, h("span", { text: label }),
-      h("input", { type: "number", disabled: !!d.builderEnabled && ["n_layer", "n_embd", "n_head", "block_size"].includes(key), step: "any", min: "0", placeholder: String(ph), value: d.adv[key] || "", oninput: e => { d.adv[key] = e.target.value; } }),
+      h("input", { type: "number", disabled: !!d.build && ["n_layer", "n_embd", "n_head", "block_size"].includes(key), step: "any", min: "0", placeholder: String(ph), value: d.adv[key] || "", oninput: e => { d.adv[key] = e.target.value; } }),
       hint ? h("span", { class: "small muted", style: "font-weight:400", text: hint }) : null);
     const hw = S.app.hw || {};
     return h("main", { class: "narrow stack-lg" },
@@ -673,7 +724,10 @@
         h("p", { class: "lead" }, "It will learn from ", h("b", { text: ds.name }), ` (${big(ds.n_train)} pieces of text) on your ${hw.device === "cpu" ? "computer's main processor" : hw.gpu || "graphics card"}.`)),
       h("div", {}, h("h2", { text: "Brain size" }),
         h("p", { class: "muted", style: "margin:6px 0 12px", text: "Bigger brains can learn more, but need a stronger computer, more text and more time." }),
-        h("ul", { class: "choices" }, rec.cards.map(c => {
+        h("div", { class: "seg", role: "group", "aria-label": "How to choose the brain", style: "margin-bottom:14px" },
+          h("button", { type: "button", "aria-pressed": String(!d.build), onclick: () => setMode(false) }, "Pick a ready-made size", h("small", { text: "The easy way" })),
+          h("button", { type: "button", "aria-pressed": String(!!d.build), onclick: () => setMode(true) }, "Build it yourself", h("small", { text: "Stack the blocks by hand" }))),
+        d.build ? brainBuilder(d, ds, preset, fromPreset) : h("ul", { class: "choices" }, rec.cards.map(c => {
           const fit = rec.fits[c.id], on = d.preset === c.id, no = fit.level === "no";
           return h("li", { class: "choice" + (on ? " on" : "") + (no ? " dim" : "") },
             h("label", {},
@@ -686,7 +740,6 @@
                 h("div", { class: "d", text: c.blurb + (fit.note ? " " + fit.note : "") })),
               h("div", { class: "meta", text: big(c.params) + " connections" })));
         }))),
-      window.FPBuilder.render(h, d, render, preset, ds.vocab_size),
       h("div", { class: "stack" }, h("h2", { text: "How long should it study?" }),
         h("div", { class: "seg", role: "group", "aria-label": "How long" }, S.app.budgets.map(b =>
           h("button", { type: "button", "aria-pressed": String(d.budget === b.seconds), onclick: () => { d.budget = b.seconds; render(); } }, b.name, h("small", { text: b.blurb })))),
@@ -697,7 +750,7 @@
         "A small AI picks up the style of what it reads: its words, its rhythm, its way of putting sentences together. It will not know facts or hold a real conversation. The chatbots you have used are around 100,000 times bigger and read a large part of the internet."),
       h("details", { class: "adv" }, h("summary", { text: "Advanced choices (you can ignore these)" }),
         h("div", { class: "stack" },
-          h("p", { class: "small muted", text: d.builderEnabled ? "Layers, width, heads and context come from your block builder. Other training choices below still apply." : "Leave a box empty to keep the setting that comes with the brain size you picked." }),
+          h("p", { class: "small muted", text: d.build ? "Layers, width, heads and memory come from the blocks you stacked. The other choices below still apply." : "Leave a box empty to keep the setting that comes with the brain size you picked." }),
           h("div", { class: "grid2" },
             advField("n_layer", "Layers", preset.n_layer), advField("n_embd", "Width", preset.n_embd, "Must divide by the number of heads."),
             advField("n_head", "Attention heads", preset.n_head), advField("block_size", "How far back it looks (context)", preset.block_size, "In pieces of text."),
@@ -706,10 +759,13 @@
           h("label", {}, h("input", { type: "checkbox", checked: d.autostop, onchange: e => { d.autostop = e.target.checked; } }), " Stop by itself when it starts memorising (recommended)"))),
       h("div", { class: "btnrow between" },
         h("button", { class: "btn quiet", text: "Back", onclick: () => { d.dataset = null; go("data"); } }),
-        h("button", { class: "btn primary", text: "Start training", onclick: async () => {
+        R.startBtn = h("button", { class: "btn primary", text: "Start training", disabled: !!d.build && !!(d.problem || (d.fit && d.fit.level === "no")), onclick: async () => {
           const overrides = {};
           for (const [k, v] of Object.entries(d.adv)) if (v !== "" && v != null && !isNaN(Number(v))) overrides[k] = Number(v);
-          const r = await act(() => post("/api/train", { dataset: d.dataset, preset: d.preset, name: d.aiName.trim(), budget_sec: d.budget, overrides, autostop: d.autostop, architecture: window.FPBuilder.serialize(d) }));
+          // a hand-built design borrows its learning speed and batch size from the nearest ready-made size
+          const body = { dataset: d.dataset, preset: d.build && d.fit ? d.fit.preset : d.preset, name: d.aiName.trim(), budget_sec: d.budget, overrides, autostop: d.autostop };
+          if (d.build) body.architecture = d.architecture;
+          const r = await act(() => post("/api/train", body));
           if (r) { await refresh(); S.draft = null; go("train", r.run); }
         } })));
   }

@@ -1,0 +1,66 @@
+name: Builder and website
+
+# The block builder is one piece of code used in two places: the app's "How big a brain?"
+# step and the website (docs/, served by GitHub Pages), where the stack you build is trained
+# inside the page. This checks, on every change:
+#   - the in-page network against finite differences, and against the app's PyTorch model
+#   - the website and the app's builder in a real browser, with a mouse and with a finger
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: engine, PyTorch parity, real browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install PyTorch (CPU), the app's requirements and a browser
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements.txt playwright
+          python -m playwright install --with-deps chromium
+      - name: The website's copies of the shared files are up to date
+        run: python tools/sync_site.py --check
+      - name: In-page network - gradients, design rules, WebAssembly vs JavaScript, learning
+        run: node tests/web/test_nn.js
+      - name: In-page network gives the same answers as the app's PyTorch model
+        run: python tests/web/parity.py
+      - name: App - design checker and custom models (unit tests)
+        run: python -m unittest discover -s tests -v
+      - name: Website and app builder in a real browser (mouse, keyboard, touch, training)
+        env:
+          FP_SHOTS: ${{ runner.temp }}/shots
+        run: python tests/web/browser_check.py
+      - name: Website in Firefox and in WebKit (Safari's engine)
+        env:
+          FP_SHOTS: ${{ runner.temp }}/shots
+        run: |
+          python -m playwright install --with-deps firefox webkit
+          FP_BROWSER=firefox python tests/web/browser_check.py site
+          FP_BROWSER=webkit python tests/web/browser_check.py site
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+          retention-days: 14

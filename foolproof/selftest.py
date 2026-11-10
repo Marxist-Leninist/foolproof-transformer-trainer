@@ -99,6 +99,15 @@ def _server_roundtrip(tmp: str, architecture=None) -> None:
         api("POST", "/api/prepare", {"name": "Shakespeare", "source": {"type": "builtin", "id": "shakespeare"}})
         ev, _ = wait_for(lambda e: e.get("type") == "job_end" and e.get("kind") == "prepare", 180)
         _check(ev is not None and ev.get("reason") == "done", "prepares text through the app")
+        if architecture:
+            fit = api("POST", "/api/fit", {"dataset": ev["dataset"], "architecture": architecture})
+            _check(fit.get("level") in ("ok", "slow") and fit.get("params") == 64 * 260 + 64 + (4 + 8 + 12) * 64 * 64 + 4 * 64,
+                   f"checks a hand-built design against this computer: {fit.get('level')}, {fit.get('params')} connections")
+            try:
+                api("POST", "/api/fit", {"dataset": ev["dataset"], "architecture": dict(architecture, blocks=[{"type": "feed_forward"}])})
+                _check(False, "refuses a design that cannot look back")
+            except urllib.error.HTTPError as e:
+                _check("ttention" in e.read().decode("utf-8", "replace"), "refuses a design that cannot look back, in plain words")
         r = api("POST", "/api/train", {"dataset": ev["dataset"], "preset": "pocket", "name": "Server test",
                                        "budget_sec": 6, "architecture": architecture,
                                        "overrides": {"n_layer": 2, "n_head": 2, "n_embd": 64, "block_size": 64, "batch": 16,
@@ -251,10 +260,11 @@ def main(argv=None) -> int:
     names = {p.name for p in folder.iterdir()}
     _check({"model.safetensors", "config.json", "tokenizer.json", "chat.py", "README.md"} <= names, "exports a shareable folder")
 
-    architecture = None
-    if "--builder" in argv:
-        architecture = dict(version=1,width=64,heads=2,context=64,
-                            blocks=[{"type":"attention"},{"type":"feed_forward"},{"type":"transformer"}])
+    # The app's own window is driven with a hand-built design (attention, feed-forward, then a
+    # transformer layer), so every launcher run on every platform also proves the block builder.
+    # The ready-made sizes were trained directly just above.
+    architecture = dict(version=1, width=64, heads=2, context=64,
+                        blocks=[{"type": "attention"}, {"type": "feed_forward"}, {"type": "transformer"}])
     _server_roundtrip(tmp, architecture)
 
     if online:

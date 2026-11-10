@@ -4,6 +4,9 @@
 
 Pick some text for it to read, press Start, and watch it learn to write. Then talk to it.
 
+**Want a taste first? [Build a transformer in your browser](https://marxist-leninist.github.io/foolproof-transformer-trainer/):
+drag the blocks, switch it on, and watch a real one learn. Nothing to install.**
+
 ![The training screen: the AI's own writing on a sheet of lined paper, a progress ladder and a chart](docs/screenshots/training.png)
 
 It is a real GPT-style transformer, trained from scratch, the same kind of brain as the famous
@@ -55,7 +58,7 @@ The same one line as on a Mac. It adds *Foolproof Trainer* to your applications 
 | | |
 |---|---|
 | **1. Give it something to read** | A built-in starter library (Shakespeare works with no internet at all; TinyStories is the best first real one), a search box for the whole of Hugging Face, or your own files: drop in text files, Word documents, PDFs, ebooks, spreadsheets, a whole folder, or just paste text. |
-| **2. Pick a brain size and a time** | The app looks at your computer and your text and recommends a size. Then: 5 minutes, 30 minutes, overnight, or until you stop it. |
+| **2. Pick a brain size and a time** | The app looks at your computer and your text and recommends a size. Or choose **Build it yourself** and stack the blocks by hand: what you stack is what gets trained. Then: 5 minutes, 30 minutes, overnight, or until you stop it. |
 | **3. Watch it learn** | Its own writing appears on a sheet of paper and improves in front of you: random letters, then word-shaped nonsense, then sentences. Slide back in time to see how it wrote earlier. A five-step ladder and a chart show how far it has got, in plain words. |
 | **4. Talk to it** | Chat with it, or start a sentence and let it carry on. Train it further, save a copy that runs without this app, or put it on Hugging Face. |
 
@@ -153,6 +156,9 @@ Everything is in the [`foolproof`](foolproof) folder, in plain Python with no fr
   well you could predict it knowing only how common each piece is, and knowing only the piece
   before. The five stages are set relative to those, so they mean the same for letter-by-letter
   Shakespeare as for word-piece Wikipedia.
+- **Hand-built designs** ([`architecture.py`](foolproof/architecture.py)): the builder sends a short
+  description (width, heads, memory, and the list of blocks); it is checked strictly, turned into
+  the model, and kept in the model's settings.
 - **The window** ([`server.py`](foolproof/server.py), [`web/`](foolproof/web)): a small local web
   server from the Python standard library and a page with no framework and no build step. It only
   listens on your own computer, and every request needs a secret made fresh at each start.
@@ -171,32 +177,61 @@ python -m foolproof --selftest   # check everything end to end
 
 Every push is tested by starting the real launchers on Windows, macOS and Linux machines
 ([workflow](.github/workflows/launchers.yml)): they install everything from nothing, prepare text,
-train a miniature AI, chat with it and shut down.
+train a miniature AI (a ready-made size, and a hand-built design through the app's own window),
+chat with it and shut down.
+
+The builder and the website have their own checks ([workflow](.github/workflows/site.yml)):
+
+```
+node tests/web/test_nn.js                  # the in-page network: gradients, design rules, WebAssembly vs JavaScript
+python tests/web/parity.py                 # the in-page network against the app's PyTorch model
+python -m unittest discover -s tests -v    # the app's design checker and custom models
+python tests/web/browser_check.py          # website and app builder in a real browser: mouse, keyboard, touch
+python tools/sync_site.py                  # after changing foolproof/web: refresh the website's copies
+```
+
+## The block builder
+
+In the app, at **How big a brain?**, choose **Build it yourself**. On the
+[website](https://marxist-leninist.github.io/foolproof-transformer-trainer/) it is the first thing on the page.
+It is the same builder in both places.
+
+- **Drag** a block from the tray onto the worksheet, drag blocks up and down to re-order them, and
+  drag one back to the tray to take it off. With a mouse, drag from anywhere on a block; on a
+  touch screen, drag by its dotted handle (so the page still scrolls under your finger).
+- **Or do not drag at all:** tap a block in the tray to add it, and use the up, down and remove
+  buttons on each block. With a keyboard: Tab to a block, then Alt+Up, Alt+Down or Delete.
+- Three kinds of block: **Attention** (looks back over what it has read), **Feed-forward** (thinks
+  about what it found) and **Transformer layer** (one of each, the classic pair). The width, the
+  memory and the number of attention heads are drop-downs that only offer values that work.
+- The stack is the model. It is not a picture of one: the trainer builds exactly those blocks in
+  exactly that order, and saves the order with the model, so it survives pausing, more training
+  and exporting.
+
+The app checks a hand-built design against your computer before training and says so in words
+if it is too big. Limits: up to 16 blocks, width 32 to 768, 1 to 16 heads, memory (context) 32 to
+1,024, at least one block that looks back, and 350 million parameters. These are limits on what
+it will accept, not a promise that the largest design is a sensible one for your machine.
+
+A design made on the website has a short code such as `fp1-w64-h4-c64-tta`. Paste it into the
+app to carry on with the same stack at full size.
+
+### The network on the website is real
+
+The website trains the stack you built inside the page: a transformer written out by hand in
+JavaScript ([`docs/nn.js`](docs/nn.js)), with the heavy multiplying in WebAssembly
+([`docs/kernels.c`](docs/kernels.c)), running in a worker on your own processor. It is small
+(up to a few hundred thousand parameters, learning one letter at a time), and it does the same
+sums as the app's PyTorch model:
+
+- every hand-written gradient is checked against finite differences;
+- the same weights are loaded into the app's PyTorch model and into the page's network, under
+  PyTorch's own parameter names, and the scores, the loss and every gradient must agree. They do,
+  to about one part in a million;
+- the WebAssembly loops are checked against the plain JavaScript ones, which remain as the path
+  for browsers without WebAssembly SIMD.
 
 ## Licence
 
 [MIT](LICENSE). Bundled fonts and the Shakespeare text are listed in [THIRD-PARTY.md](THIRD-PARTY.md).
 Each dataset in the starter library has its own licence, shown next to it in the app.
-
-## Visual Transformer builder
-
-In **Brain size**, select **Build my own**. Drag blocks from the palette into the
-ordered list, or use the Add, Move up/down, Duplicate and Remove buttons on a
-touchscreen or keyboard. The selected order is the actual model trained, not a
-diagram: complete Transformer, causal attention, and feed-forward residual
-blocks are supported. Embeddings, RoPE, final normalization and tied output stay
-fixed. This is a sequential decoder builder, not arbitrary graph wiring.
-
-The server validates dimensions, head divisibility, block types and limits
-before creating a run. Limits: 1–16 blocks, width 64–768, 1–16 heads, context
-32–1,024, at least one attention-bearing block and 350M parameters maximum.
-These are validation limits, not promises that every design fits your device.
-Custom designs keep the regular training stop controls and batch-fit behavior.
-Architecture persists in checkpoints, resumed runs and exports. Preset fit
-labels apply to presets, not custom designs.
-
-Builder checks: `python -m unittest discover -s tests -v`.
-
-UI control checks: `node tests/test_builder.js` (a lightweight DOM double, not
-visual browser testing). Full custom-model HTTP test:
-`python -m foolproof.selftest --builder`.

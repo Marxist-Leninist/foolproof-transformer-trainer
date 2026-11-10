@@ -4,7 +4,7 @@ def validate(value, vocab_size):
         raise ValueError("Use the supported version 1 builder configuration.")
     if type(value["version"]) is not int or value["version"] != 1:
         raise ValueError("Unsupported builder version.")
-    limits = {"width": (64, 768), "heads": (1, 16), "context": (32, 1024)}
+    limits = {"width": (32, 768), "heads": (1, 16), "context": (32, 1024)}
     for key, (low, high) in limits.items():
         if type(value[key]) is not int or not low <= value[key] <= high:
             raise ValueError(f"{key} must be a whole number from {low} to {high}.")

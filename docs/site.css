@@ -1,0 +1,43 @@
+/* The website: only what the app's own stylesheet (app/style.css) does not already give. */
+.site main { padding-top: 40px; }
+.site h1 { font-size: clamp(2rem, 4.6vw, 3.1rem); max-width: 18ch; }
+.site .lead { max-width: 66ch; }
+.site section + section { border-top: 2px solid var(--rule); padding-top: 38px; }
+.site .brand-mark { display: block; }
+.site .top .linkbtn { text-decoration: underline; }
+
+/* the one highlighted action: switch it on */
+.go { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 6px 0 2px; }
+.go-status { flex: 1 1 260px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.go-status.bad { color: #8f1d22; font-weight: 600; }
+
+.legend i.k1 { border-color: var(--series-1); }
+.legend i.k2 { border-color: var(--series-2); }
+details.adv.plain { border: 0; padding: 0; }
+.numbox { max-height: 220px; overflow: auto; }
+.paper-body .said { color: var(--ink); }
+
+/* getting the app */
+.shot { margin: 0; }
+.shot img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--sheet); }
+.shot figcaption { padding-top: 8px; }
+.platforms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.howto { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.howto li::marker { font-weight: 700; }
+.codebox { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.codebox code { flex: 1 1 220px; min-width: 0; font: 400 0.95rem/1.5 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; background: var(--paper); border: 1.5px dashed var(--ink-3); border-radius: 6px; padding: 8px 12px; overflow-wrap: anywhere; user-select: all; }
+.codebox .btn { padding: 7px 14px; }
+
+.faq { border-top: 1px solid var(--rule); }
+.faq details { border-bottom: 1px solid var(--rule); padding: 14px 2px; }
+.faq summary { cursor: pointer; font-weight: 700; font-size: 1.08rem; }
+.faq details p { margin-top: 10px; color: var(--ink-2); max-width: 72ch; }
+
+.foot { max-width: 1120px; margin: 0 auto; padding: 22px 28px 60px; color: var(--ink-3); font-size: 0.9rem; border-top: 1px solid var(--rule); }
+
+@media (max-width: 900px) {
+  .platforms { grid-template-columns: minmax(0, 1fr); }
+  .go .btn.primary { flex: 1 1 100%; }
+  .foot { padding: 18px 16px 50px; }
+  .site section + section { padding-top: 28px; }
+}

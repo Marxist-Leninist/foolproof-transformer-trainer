@@ -172,6 +172,14 @@ class App:
             return {"ok": True, "job": job["id"]}
         if path == "/api/job/stop":
             return {"ok": mgr.stop()}
+        if path == "/api/fit":      # will this hand-built design train on this computer, with this text?
+            ds = self.dataset(body.get("dataset", ""))
+            from .architecture import validate
+            try:
+                model, params = validate(body.get("architecture"), int(ds["vocab_size"]))
+            except ValueError as e:
+                raise ApiError(str(e)) from e
+            return presets.fit_custom(self.hw(), int(ds["n_train"]), int(ds["vocab_size"]), model, params)
         if path == "/api/train":
             ds = self.dataset(body.get("dataset", ""))
             hw = self.hw()
