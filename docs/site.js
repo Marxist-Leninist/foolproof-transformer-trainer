@@ -101,6 +101,7 @@
     S.state = "failed";
     drawControls();
     const st = $("status"); st.textContent = message; st.classList.add("bad");
+    $("announce").textContent = message;
   }
   function pause(why) {
     if (S.state !== "running") return;
@@ -176,6 +177,10 @@
     else if (S.state === "running") {
       st.textContent = t && t.step ? `Learning from ${source()}: ${steps(t.step)} so far, about ${t.speed >= 10 ? Math.round(t.speed) : t.speed.toFixed(1)} a second.` : "Learning from " + source() + "…";
     }
+    // the visible line changes several times a second while it learns; a screen reader is only
+    // told when something actually happens
+    const said = S.state + "|" + (why || "") + "|" + (S.state === "running" ? "" : S.problem);
+    if (said !== S.said) { S.said = said; $("announce").textContent = S.state === "running" ? "Learning from " + source() + " has started." : st.textContent; }
     $("tryBtn").disabled = !S.info || S.state === "starting" || S.state === "failed" || (S.asked && !S.asked.done);
     document.title = S.state === "running" ? "Learning… Foolproof Transformer Trainer" : "Foolproof Transformer Trainer: build a transformer and watch it learn";
   }

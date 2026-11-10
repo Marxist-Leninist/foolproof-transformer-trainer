@@ -34,7 +34,8 @@
     <div class="go" id="controls">
       <button class="btn primary" id="go" type="button">Switch it on</button>
       <button class="btn quiet hidden" id="again" type="button">Start again from nothing</button>
-      <p id="status" class="go-status" role="status" aria-live="polite">Not switched on yet. It knows nothing.</p>
+      <p id="status" class="go-status">Not switched on yet. It knows nothing.</p>
+      <p id="announce" class="sr" role="status" aria-live="polite"></p>
     </div>
     <p id="hint" class="note warn hidden"></p>
 
@@ -69,7 +70,7 @@
           <div class="viz-sub">Lower is better. This number is called the “loss”.</div>
           <div class="legend"><span><i class="k1"></i>Text it studies</span><span><i class="k2"></i>Text it has never seen</span><span id="ghostKey" class="hidden"><i class="k3"></i>Your last design</span></div>
         </div>
-        <p class="small hidden" id="versus" role="status"></p>
+        <p class="small hidden" id="versus"></p>
         <details class="adv plain"><summary class="small">Show the numbers</summary>
           <div class="numbox"><table class="nums"><thead><tr><th>When</th><th>Text it studies</th><th>Text it has never seen</th></tr></thead><tbody id="nums"></tbody></table></div>
         </details>
