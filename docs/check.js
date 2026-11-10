@@ -267,6 +267,7 @@
     running = false;
     $("again").disabled = false;
     summarise();
+    window.scrollTo(0, 0);       // the drag check scrolled down to the builder; the verdict is at the top
     if (REPORT) send();
   }
 

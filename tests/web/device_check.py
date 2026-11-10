@@ -22,6 +22,7 @@ import argparse
 import functools
 import http.server
 import json
+import socketserver
 import sys
 import threading
 import time
@@ -60,10 +61,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
 
+class Local(http.server.ThreadingHTTPServer):
+    def server_bind(self):
+        # Skip HTTPServer's reverse name lookup: on macOS it puts up a "find devices on local networks" prompt.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
+
+
 def start(host: str, port: int) -> http.server.ThreadingHTTPServer:
     Handler.reports = []
     Handler.arrived = threading.Event()
-    server = http.server.ThreadingHTTPServer((host, port), functools.partial(Handler, directory=str(DOCS)))
+    server = Local((host, port), functools.partial(Handler, directory=str(DOCS)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server
 

@@ -20,6 +20,7 @@ import functools
 import http.server
 import json
 import os
+import socketserver
 import subprocess
 import sys
 import threading
@@ -61,8 +62,26 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+class Local(http.server.ThreadingHTTPServer):
+    def server_bind(self):
+        # Skip HTTPServer's reverse name lookup: on macOS it puts up a "find devices on local networks" prompt.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
+
+
+LOOK = """
+const pick = s => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(), c = getComputedStyle(e);
+  return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), 'opacity ' + c.opacity, c.visibility, c.display, c.color]; };
+const mid = document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+return {page: document.visibilityState, focused: document.hasFocus(), window: [innerWidth, innerHeight], scrolled: Math.round(scrollY),
+        height: document.documentElement.scrollHeight, fonts: document.fonts ? document.fonts.status : '?',
+        heading: pick('h1'), builder: pick('#builder'), first_block: pick('.bld-block'), go: pick('#go'), verdict: pick('#verdict'),
+        in_the_middle: mid ? mid.nodeName.toLowerCase() + '.' + (mid.className && mid.className.baseVal !== undefined ? mid.className.baseVal : mid.className) : null};
+"""
+
+
 def main() -> int:
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Quiet, directory=str(ROOT / "docs")))
+    server = Local(("127.0.0.1", 0), functools.partial(Quiet, directory=str(ROOT / "docs")))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
     driver = webdriver.Safari()
@@ -84,6 +103,7 @@ def main() -> int:
                 driver.save_screenshot(str(Path(SHOTS) / f"safari-{name}.png"))
                 if sys.platform == "darwin":
                     subprocess.run(["screencapture", "-x", str(Path(SHOTS) / f"safari-screen-{name}.png")], check=False, timeout=20)
+            print(f"       (what Safari says is on screen at '{name}': {json.dumps(js(LOOK))})", flush=True)
 
         def block(i: int, inner: str = ""):
             return driver.find_elements(By.CSS_SELECTOR, ".bld-block")[i].find_element(By.CSS_SELECTOR, inner) if inner \
@@ -222,6 +242,15 @@ def main() -> int:
                   f"{len(problems) - len(own)} such reports on the builder's drop-downs are Safari's own and are not counted)", flush=True)
         check(not own, "no script errors, and nothing of the site's own blocked by the page's security policy" + ("" if not own else ": " + " | ".join(own[:3])))
         shot("end")
+
+        # ---- the self-check page (docs/check.html) in the same Safari
+        driver.get(url + "check.html")
+        done = wait_until(lambda: "automatic checks" in text("#verdict"), 120)
+        verdict = text("#verdict") if done else "no verdict after two minutes"
+        check(done and verdict.startswith("All 9 automatic checks worked"), "the self-check page passes its own checks in Safari: " + verdict)
+        if not (done and verdict.startswith("All 9")):
+            print("       " + js("return document.getElementById('summary').value").replace("\n", "\n       "), flush=True)
+        shot("selfcheck")
     finally:
         driver.quit()
         server.shutdown()
