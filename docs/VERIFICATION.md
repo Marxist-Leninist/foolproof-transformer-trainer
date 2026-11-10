@@ -44,7 +44,7 @@ graphics card; the same checks run on GitHub's machines on every push
   `tools/build_kernels.sh` (clang 18). CI does not rebuild it; CI tests its behaviour.
 
 ### The builder in a real browser
-- `python tests/web/browser_check.py`, 46 checks, all passing locally in headless Chrome with
+- `python tests/web/browser_check.py`, about 50 checks, all passing locally in headless Chrome with
   the page's Content-Security-Policy enforced:
   website with a mouse (drag from the tray to a position, re-order, drag off, Escape to
   cancel), without dragging (tap to add, arrow buttons, Alt+arrow keys, live announcements),
@@ -57,8 +57,13 @@ graphics card; the same checks run on GitHub's machines on every push
   model equals the stack).
 - The finger gestures are sent through Chromium's touch input on an emulated phone screen.
   That is real pointer and touch event handling, but it is not a physical phone or tablet.
-- CI also runs the website checks in Firefox and in WebKit (the engine Safari uses).
-  WebKit on Linux is close to Safari but is not Safari itself.
+- CI also runs the website checks in Firefox and in WebKit (the engine Safari uses), and
+  they pass in both, including training in the page on the WebAssembly loops. A separate
+  check blocks `kernels.wasm` and confirms that the page still learns on the plain
+  JavaScript loops. WebKit on Linux is close to Safari but is not Safari itself.
+- First fully green run of both workflows with the shared builder: commit 236143a
+  (launchers on Windows, macOS Apple Silicon, macOS Intel and Ubuntu; engine, PyTorch
+  parity, Chromium, Firefox and WebKit).
 - Screen readers: the builder announces every change through a live region and every control
   is a labelled button or drop-down. No screen reader was actually run.
 

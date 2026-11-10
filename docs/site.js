@@ -118,6 +118,7 @@
   function onMessage(m) {
     if (m.type === "ready") {
       S.info = m;
+      document.documentElement.setAttribute("data-engine", m.backend);     // "wasm" or "js": which loops are doing the sums
       S.builder.setVocab(m.vocab);
       S.state = "running";
       S.worker.postMessage({ type: "run" });

@@ -1038,7 +1038,9 @@
                 } }), shareOut))),
           h("div", { class: "sheet stack" }, h("h3", { text: "About this AI" }),
             h("dl", { class: "kv" },
-              h("dt", { text: "Brain" }), h("dd", { text: `${m.model.n_layer} layers, width ${m.model.n_embd}, looks back ${m.model.block_size} pieces` }),
+              h("dt", { text: "Brain" }), h("dd", { text: (m.model.block_types
+                ? `built by hand: ${m.model.block_types.map(k => window.FPDesign.KINDS[k] ? window.FPDesign.KINDS[k].name : k).join(", then ")}`
+                : `${m.model.n_layer} layers`) + `, width ${m.model.n_embd}, looks back ${m.model.block_size} pieces` }),
               h("dt", { text: "Read" }), h("dd", { text: m.dataset_label || m.dataset_name || "" }),
               st.tokens_seen ? [h("dt", { text: "Practice" }), h("dd", { text: `${int(st.step || 0)} steps, ${big(st.tokens_seen)} pieces read` })] : null,
               st.best_val ? [h("dt", { text: "Best score" }), h("dd", { text: `${st.best_val} on unseen text (lower is better)` })] : null),

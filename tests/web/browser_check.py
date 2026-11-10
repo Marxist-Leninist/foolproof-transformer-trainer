@@ -152,6 +152,7 @@ def site(browser) -> None:
         page.click("#go")
         started = wait_until(lambda: page.locator("#facts > div").count() >= 3, 40)
         check(started, "Switch it on: the network starts learning in the page")
+        check(page.locator("html").get_attribute("data-engine") == "wasm", "the fast WebAssembly loops are in use in this browser")
         first = page.inner_text("#writing")
         time.sleep(14)
         stage = page.inner_text("#stageTitle")
@@ -192,6 +193,18 @@ def site(browser) -> None:
         text = page.inner_text("#writing")
         check(learnt and ("cat" in text or "dog" in text or "sat" in text), "it learns from your own text: " + json.dumps(text[:40]))
         check(not problems, "no errors or warnings in the browser console" + ("" if not problems else ": " + " | ".join(problems[:3])))
+        page.close()
+
+        # ---- a browser that cannot have the fast path: the plain JavaScript loops must carry it
+        page = browser.new_page(viewport={"width": 1000, "height": 800})
+        page.route("**/kernels.wasm", lambda route: route.abort())
+        page.goto(url)
+        page.wait_for_selector(".bld-block")
+        page.click("#go")
+        slow_path = wait_until(lambda: page.locator("html").get_attribute("data-engine") == "js" and "steps so far" in page.inner_text("#status"), 60)
+        time.sleep(4)
+        check(slow_path and "Stage" in page.inner_text("#stageTitle") and page.locator("#viz svg path.line").count() >= 1,
+              "with kernels.wasm unavailable it still learns, on the plain JavaScript loops: " + page.inner_text("#status")[-34:])
         page.close()
 
         if ENGINE != "chromium":
