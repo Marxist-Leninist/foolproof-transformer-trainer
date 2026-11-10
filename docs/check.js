@@ -33,6 +33,7 @@
   const facts = {};
   const errors = [];           // script errors, refused promises and anything the page's security policy blocked
   let builder = null, changes = [], worker = null, running = false, finger = "not tried";
+  let probing = false, selectQuirk = false, quirkReports = 0;
   let touchDown = false, ghostSeen = false, orderAtTouch = "";
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -160,6 +161,9 @@
     verdict("Checking this device…");
     if (worker) { worker.stop(); worker = null; }
 
+    await probeSelect();
+    quirkReports = 0;
+
     // 1 scripts
     set("scripts", "run");
     const haveScripts = !!(D && B && typeof D.classic === "function" && typeof B.mount === "function");
@@ -264,6 +268,10 @@
     if (!bad.length && !errors.length) verdict(`All ${CHECKS.length} automatic checks worked on this device.`, "good");
     else if (!bad.length) verdict(`The ${CHECKS.length} automatic checks worked, but the browser reported ${errors.length === 1 ? "an error" : errors.length + " errors"} along the way. See the result below.`, "bad");
     else verdict(`${bad.length} of ${CHECKS.length} automatic checks did not work on this device. The list below says which.`, "bad");
+    if (selectQuirk) {
+      facts["Browser's own reports"] = `${quirkReports} inline-style report${quirkReports === 1 ? "" : "s"} about drop-downs, which this browser files for any drop-down on any page; not counted`;
+      drawFacts();
+    }
     running = false;
     $("again").disabled = false;
     summarise();
@@ -302,7 +310,23 @@
   const note = text => { if (errors.length < 10) errors.push(String(text).slice(0, 200)); };
   window.addEventListener("error", ev => note("script error: " + ((ev && ev.message) || "unknown")));
   window.addEventListener("unhandledrejection", ev => note("refused promise: " + ((ev && ev.reason && ev.reason.message) || (ev && ev.reason) || "unknown")));
-  document.addEventListener("securitypolicyviolation", ev => note("blocked by the page's security policy: " + ev.violatedDirective + " " + (ev.blockedURI || "")));
+  document.addEventListener("securitypolicyviolation", ev => {
+    // Safari on a Mac files an inline-style report for every drop-down a page creates, before the page has touched
+    // it: the report is about Safari's own drawing of the drop-down. probeSelect() finds out whether this browser
+    // does that; if it does, those reports are counted separately and are not held against the site.
+    const style = String(ev.violatedDirective || "").indexOf("style-src") === 0 && String(ev.blockedURI || "") === "inline";
+    if (style && probing) { selectQuirk = true; return; }
+    if (style && selectQuirk && ev.target && ev.target.nodeName === "SELECT") { quirkReports++; return; }
+    note("blocked by the page's security policy: " + ev.violatedDirective + " " + (ev.blockedURI || ""));
+  });
+  async function probeSelect() {
+    probing = true;
+    const probe = document.createElement("select");
+    document.body.append(probe);
+    await sleep(250);
+    probe.remove();
+    probing = false;
+  }
   gatherFacts();
   drawList();
   if (D && B) watchFinger();

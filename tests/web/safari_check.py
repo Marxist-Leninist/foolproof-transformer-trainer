@@ -122,6 +122,16 @@ def main() -> int:
             chain.pause(0.15).release().perform()
             time.sleep(0.4)
 
+        # A control for the pictures: a page that is nothing but a red block. If this comes out blank in the
+        # pictures too, the machine cannot show Safari's pages at all and the pictures say nothing about the site.
+        driver.get("data:text/html,<title>paint control</title><body style='margin:0;background:rgb(220,0,0)'><h1 style='font:700 80px sans-serif;color:white;padding:60px'>PAINT CONTROL</h1>")
+        time.sleep(1.0)
+        if SHOTS:
+            Path(SHOTS).mkdir(parents=True, exist_ok=True)
+            driver.save_screenshot(str(Path(SHOTS) / "safari-paint-control.png"))
+            if sys.platform == "darwin":
+                subprocess.run(["screencapture", "-x", str(Path(SHOTS) / "safari-screen-paint-control.png")], check=False, timeout=20)
+
         driver.get(url)
         check(wait_until(lambda: count(".bld-block") >= 1, 20), "the page opens and the builder draws")
         js("window.__fpErrors = [];"
@@ -158,8 +168,8 @@ def main() -> int:
            " + (e.ctrlKey ? '+ctrl' : '') + (e.isTrusted ? '' : ' (scripted)')), true);")
         before = kinds()
         js("arguments[0].focus()", block(0))
-        block(0).send_keys(Keys.CONTROL, Keys.ARROW_DOWN)
-        ActionChains(driver).key_up(Keys.CONTROL).key_up(Keys.ALT).perform()      # never leave a modifier held down
+        block(0).send_keys(Keys.CONTROL, Keys.ARROW_DOWN, Keys.NULL)              # the null key lets go of every modifier
+        ActionChains(driver).key_up(Keys.CONTROL).key_up(Keys.ALT).perform()      # and again, the other way: never leave one held
         time.sleep(0.4)
         check(kinds() == [before[1], before[0], before[2]],
               f"keyboard: Ctrl and the down arrow, typed, move the block that has the keyboard (keys the page saw: {', '.join(js('return window.__fpKeys')) or 'none'})")
@@ -215,7 +225,13 @@ def main() -> int:
         reports("learning")
         shot("learning")
         reports("the second screenshot")
-        one("#tryIn").send_keys("To be, or ")
+        box = one("#tryIn")
+        box.send_keys(Keys.NULL)
+        box.send_keys("To be, or ")
+        typed = js("return document.getElementById('tryIn').value")
+        if typed != "To be, or ":
+            print(f"       (safaridriver typed {typed!r} into the box, so the words are put in by script instead)", flush=True)
+            js("const b = document.getElementById('tryIn'); b.value = arguments[0]; b.dispatchEvent(new Event('input', {bubbles: true}));", "To be, or ")
         one("#tryBtn").click()
         carried = wait_until(lambda: len(text("#writing")) > 60, 20)
         check(carried and text("#writing").startswith("To be, or "), "it carries on from words you type")
