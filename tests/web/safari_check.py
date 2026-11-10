@@ -131,24 +131,21 @@ def main() -> int:
         check(kinds() == ["transformer", "feed_forward", "attention"], "the arrow button moves a block up")
         check("moved to position" in text(".bld .sr"), "screen readers are told what moved")
         reports("the buttons")
-        # The builder moves a block on Alt (or Ctrl) with an arrow key. safaridriver does not always hold a
-        # modifier down, so this tries the real chords first and says exactly how the key reached the page.
+        # The builder moves a block on Ctrl or Alt with an arrow key. Typed through safaridriver, a Ctrl chord arrives
+        # as a real keyboard would send it. An Option chord does not (the arrow arrives with no key name, which no real
+        # keyboard does), so the Alt path is exercised with a scripted key event and labelled as such.
         js("window.__fpKeys = []; document.addEventListener('keydown', e => window.__fpKeys.push(e.key + (e.altKey ? '+alt' : '')"
            " + (e.ctrlKey ? '+ctrl' : '') + (e.isTrusted ? '' : ' (scripted)')), true);")
         before = kinds()
-        swapped = [before[1], before[0], before[2]]
-        how = ""
-        for label, send in (("Alt and the down arrow, typed", lambda: block(0).send_keys(Keys.ALT, Keys.ARROW_DOWN)),
-                            ("Ctrl and the down arrow, typed", lambda: block(0).send_keys(Keys.CONTROL, Keys.ARROW_DOWN)),
-                            ("Alt and the down arrow, as a scripted key event because safaridriver would not hold the modifier",
-                             lambda: js("arguments[0].dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', altKey: true, bubbles: true, cancelable: true}))", block(0)))):
-            js("arguments[0].focus()", block(0))
-            send()
-            time.sleep(0.4)
-            if kinds() == swapped:
-                how = label
-                break
-        check(bool(how), f"keyboard: {how or 'no key chord'} moves the block that has the keyboard (keys the page saw: {', '.join(js('return window.__fpKeys')) or 'none'})")
+        js("arguments[0].focus()", block(0))
+        block(0).send_keys(Keys.CONTROL, Keys.ARROW_DOWN)
+        ActionChains(driver).key_up(Keys.CONTROL).key_up(Keys.ALT).perform()      # never leave a modifier held down
+        time.sleep(0.4)
+        check(kinds() == [before[1], before[0], before[2]],
+              f"keyboard: Ctrl and the down arrow, typed, move the block that has the keyboard (keys the page saw: {', '.join(js('return window.__fpKeys')) or 'none'})")
+        js("arguments[0].dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowUp', altKey: true, bubbles: true, cancelable: true}))", block(1))
+        time.sleep(0.4)
+        check(kinds() == before, "keyboard: Alt and the up arrow, as a scripted key event, move it back")
         reports("the keyboard")
 
         # ---- with a mouse
